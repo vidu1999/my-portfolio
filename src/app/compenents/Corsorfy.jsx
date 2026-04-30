@@ -21,7 +21,7 @@ export default function Corsorfy() {
           <directionalLight position={[5, 5, 5]} intensity={2} />
 
           <AnimatedDroneModel
-            glbPath="/models/animated_drone.glb"
+            glbPath={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/models/animated_drone.glb`}
           />
         </Suspense>
       </Canvas>

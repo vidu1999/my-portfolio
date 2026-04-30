@@ -6,7 +6,7 @@ import { useGLTF, useAnimations } from "@react-three/drei";
 
 export function Anime(props) {
   const group = useRef();
-  const { scene, animations } = useGLTF("/models/3d+character+model.glb");
+  const { scene, animations } = useGLTF(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/models/3d+character+model.glb`);
   const { actions } = useAnimations(animations, group);
   alert("Loaded GLB with animations:", { actions, animations });
   useEffect(() => {

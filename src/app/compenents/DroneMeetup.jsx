@@ -118,4 +118,4 @@ const dropProgrammingImage = () => {
   return <primitive ref={group} object={scene} scale={10} />
 }
 
-useGLTF.preload("/models/animated_drone.glb")
+useGLTF.preload(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/models/animated_drone.glb`)
