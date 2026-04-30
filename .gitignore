@@ -44,3 +44,10 @@ next-env.d.ts
 
 # system files
 .DS_Store
+node_modules
+.next
+out
+dist
+*.mp4
+*.mov
+*.zip
