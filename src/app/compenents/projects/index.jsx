@@ -174,6 +174,12 @@ function TiltCard({ project, offset, onClick }) {
             </div>
 
             <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (project.link) {
+                  window.open(project.link, '_blank', 'noopener,noreferrer');
+                }
+              }}
               className="w-full py-3 rounded-xl font-black text-sm text-white relative overflow-hidden transition-all duration-300"
               style={{
                 background: isHovered
@@ -263,8 +269,11 @@ export default function App() {
         y: (e.clientY / window.innerHeight - 0.5) * 2,
       });
     };
-    window.addEventListener("mousemove", handleMouse);
-    return () => window.removeEventListener("mousemove", handleMouse);
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener("mousemove", handleMouse);
+      return () => window.removeEventListener("mousemove", handleMouse);
+    }
   }, []);
 
   return (
@@ -678,6 +687,7 @@ export default function App() {
               className="flex justify-center mt-6"
             >
               <button
+                onClick={() => window.open('https://github.com/vidu1999', '_blank', 'noopener,noreferrer')}
                 className="relative px-10 py-3 rounded-full font-black text-white text-sm overflow-hidden group transition-all duration-300 hover:scale-105"
                 style={{
                   background: "linear-gradient(90deg, rgba(139,92,246,0.2), rgba(6,182,212,0.2))",

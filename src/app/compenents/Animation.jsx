@@ -75,7 +75,7 @@ const Animation = (props) => {
       <h1
         className="text-teal-300 text-sm sm:text-base md:text-2xl mt-2 inline-block"
         ref={textRef}
-        style={{ fontFamily: "'Jacquard 12', cursive" }}
+        style={{ fontFamily: "'Space Mono', monospace", letterSpacing: '0.15em', fontWeight: 700 }}
       />
     </div>
   )

@@ -25,45 +25,31 @@ const getIcon = (icon) => {
       return <Home className="w-full h-auto" strokeWidth={1.5} />;
   }
 }
-
 const Navigationbtn = ({ x, y, label, link, icon, newTab }) => {
-
-    return (
-<>
-        <div className='hidden lg:block flex absolute hover:cursor-pointer z-50' style={{transform: `translate(${x}, ${y})`}}>
-        
-        <Link href={link} 
-        target={newTab ? '_blank' : '_self'}
-        className="text-foreground rounded-full  flex items-center justify-center custom-bg
-" 
-aria-label={label} name={label}>
-        <span className="hidden sm:pause lg:pause lg:block relative  w-14 h-14 p-4  lg:animate-spin-slow-reverse  hover:text-accent">
-                {getIcon(icon)}
-
-
   return (
-    <>
-      <div className='hidden lg:block flex absolute hover:cursor-pointer z-50' style={{ transform: `translate(${x}, ${y})` }}>
+    <div
+      className="hidden lg:block absolute hover:cursor-pointer z-50"
+      style={{ transform: `translate(${x}, ${y})` }}
+    >
+      <Link
+        href={link}
+        target={newTab ? '_blank' : '_self'}
+        className="text-foreground rounded-full flex items-center justify-center custom-bg"
+        aria-label={label}
+        name={label}
+      >
+        <span className="hidden lg:block relative w-14 h-14 p-4 lg:animate-spin-slow-reverse group-hover:pause hover:text-accent">
+          {getIcon(icon)}
 
-        <Link href={link}
-          target={newTab ? '_blank' : '_self'}
-          className="text-foreground rounded-full  flex items-center justify-center custom-bg
-"
-          aria-label={label} name={label}>
-          <span className="hidden lg:block relative  w-14 h-14 p-4 lg:animate-spin-slow-reverse group-hover:pause hover:text-accent">
-            {getIcon(icon)}
+          <span className="peer bg-transparent absolute inset-0" />
 
-            <span className="peer bg-transparent absolute top-0 left-0 w-full h-full" />
-
-            <span className="absolute hidden peer-hover:block px-2 py-1 left-full mx-2 top-1/2 -translate-y-1/2 bg-background text-foreground text-sm rounded-md shadow-lg whitespace-nowrap">
-              {label}
-            </span>
+          <span className="absolute hidden peer-hover:block px-2 py-1 left-full mx-2 top-1/2 -translate-y-1/2 bg-background text-foreground text-sm rounded-md shadow-lg whitespace-nowrap">
+            {label}
           </span>
-
-        </Link>
-      </div>
-    </>
-  )
-}
+        </span>
+      </Link>
+    </div>
+  );
+};
 
 export default Navigationbtn;

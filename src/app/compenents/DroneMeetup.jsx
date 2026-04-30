@@ -28,8 +28,10 @@ export default function DroneMeetup({
       mouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1
     }
 
-    window.addEventListener("mousemove", handleMouseMove)
-    return () => window.removeEventListener("mousemove", handleMouseMove)
+    if (typeof window !== 'undefined') {
+      window.addEventListener("mousemove", handleMouseMove)
+      return () => window.removeEventListener("mousemove", handleMouseMove)
+    }
   }, [actions])
 
 const dropProgrammingImage = () => {

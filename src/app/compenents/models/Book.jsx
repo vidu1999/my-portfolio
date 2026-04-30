@@ -1,13 +1,23 @@
 "use client"
 import React, { useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
+import { useFrame } from '@react-three/fiber'
 
 export default function Model(props) {
   const { nodes, materials } = useGLTF(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/models/open_book_about_magic-transformed.glb`)
+  const groupRef = useRef()
+
+  // Add rotation animation
+  useFrame((state, delta) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y += delta * 0.5 // Rotate slowly around Y axis
+    }
+  })
+
   try {
-  
+
   return (
-    <group {...props} dispose={null}
+    <group {...props} dispose={null} ref={groupRef}
     scale={[5,5,5]}
     >
       <mesh

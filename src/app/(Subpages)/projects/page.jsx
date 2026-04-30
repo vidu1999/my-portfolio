@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Suspense } from "react";
 // background image via path; no import
 import RenderModels from "@/app/compenents/RenderModels";
 import ProjectList from "@/app/compenents/projects";
@@ -9,8 +10,8 @@ import Stump from "@/app/compenents/models/Stump"
 export default function Home() {
   return (
     <>
-      <div className="fixed inset-0 relative">
-<Image src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/bg/pbg.png`} alt="background-image" fill priority className="object-cover object-center opacity-25"/>
+      <div className="fixed inset-0 z-0">
+<Image src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/bg/pbg.png`} alt="background-image" fill priority sizes="100vw" className="object-cover object-center opacity-25"/>
 </div>
 <div className="w-full h-screen bottom-0 fixed">
   
@@ -32,7 +33,9 @@ export default function Home() {
 </RenderModels>
 
 </div>
-{<ProjectList projects={projectsData}></ProjectList>}
+<Suspense fallback={<div>Loading projects...</div>}>
+  {<ProjectList projects={projectsData}></ProjectList>}
+</Suspense>
 
 </>
   );

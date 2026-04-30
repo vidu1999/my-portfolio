@@ -1058,7 +1058,7 @@ export default function PortfolioDeskReactTailwind() {
                       )}
                     >
                       <div className="my-2 rounded-2xl border border-white/20 bg-white/[.14] px-3.5 py-3 text-[10px] leading-[1.5] text-[#edf8ff]">
-                        "{testimonial.text}"
+                        &quot;{testimonial.text}&quot;
                       </div>
                       <div className="flex justify-end text-[9px] font-bold text-[#9fb3d6]">
                         {testimonial.name}

@@ -253,8 +253,8 @@ export default function App() {
             Contact Me
           </h1>
           <p className="mt-4 max-w-xl text-base text-slate-400 md:text-lg">
-            Let's build something <span className="font-semibold text-white">extraordinary</span> together.{" "}
-            Reach out and I'll get back within 24 hours.
+            Let&apos;s build something <span className="font-semibold text-white">extraordinary</span> together.{" "}
+            Reach out and I&apos;ll get back within 24 hours.
           </p>
         </div>
 
@@ -278,9 +278,9 @@ export default function App() {
                 <span className="text-xs font-semibold uppercase tracking-widest text-violet-400">Send a Message</span>
               </div>
               <h2 className="mb-2 text-3xl font-bold text-white md:text-4xl">
-                Let's <span className="bg-[linear-gradient(90deg,#a855f7,#06b6d4)] bg-clip-text text-transparent">Talk</span>
+                Let&apos;s <span className="bg-[linear-gradient(90deg,#a855f7,#06b6d4)] bg-clip-text text-transparent">Talk</span>
               </h2>
-              <p className="mb-8 text-slate-400">Fill out the form and I'll respond as soon as possible.</p>
+              <p className="mb-8 text-slate-400">Fill out the form and I&apos;ll respond as soon as possible.</p>
 
               <ContactForm />
             </div>
