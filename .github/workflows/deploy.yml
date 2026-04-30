@@ -5,7 +5,7 @@ on:
     branches: [ main, master ]
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -32,4 +32,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./out
-          cname: false
+          force_orphan: true
