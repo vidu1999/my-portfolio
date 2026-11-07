@@ -16,6 +16,10 @@ Websites:
 
 */
 
+// Public image URLs must include the GitHub Pages base path in production.
+const projectImage = (filename) =>
+  `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/projects/${filename}`;
+
 export const projectsData = [
   {
     id: 12,
@@ -28,7 +32,7 @@ export const projectsData = [
     borderColor: "from-orange-500 via-amber-400 to-orange-500",
     glowColor: "rgba(249,115,22,0.6)",
     techIcon: "✦",
-    image: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/projects/quickbite.webp`,
+    image: projectImage("quickbite.webp"),
     link: "https://quickbite-2ao.pages.dev/",
     featured: true,
   },
@@ -44,7 +48,7 @@ export const projectsData = [
     glowColor: "rgba(139,92,246,0.6)",
     techIcon: "▶",
     date: "2022-08-15",
-    image: "/projects/arduino.PNG",
+    image: projectImage("arduino.PNG"),
     link: "https://github.com/vidu1999/atduinocar",
   },
   {
@@ -59,7 +63,7 @@ export const projectsData = [
     glowColor: "rgba(236,72,153,0.6)",
     techIcon: "▶",
     date: "2023-07-10",
-    image: "/projects/cricket.png",
+    image: projectImage("cricket.png"),
     link: "https://github.com/vidu1999/cricketgame",
   },
   {
@@ -74,7 +78,7 @@ export const projectsData = [
     glowColor: "rgba(99,102,241,0.6)",
     techIcon: "✦",
     date: "2022-09-10",
-    image: "/projects/smartcal.png",
+    image: projectImage("smartcal.png"),
     link: "https://github.com/vidu1999/smartcalvulater",
   },
   {
@@ -89,7 +93,7 @@ export const projectsData = [
     glowColor: "rgba(6,182,212,0.6)",
     techIcon: "+",
     date: "2022-05-30",
-    image: "/projects/port.png",
+    image: projectImage("port.png"),
     link: "https://github.com/vidu1999/portfolio",
   },
   {
@@ -104,7 +108,7 @@ export const projectsData = [
     glowColor: "rgba(16,185,129,0.6)",
     techIcon: "✦",
     date: "2022-07-12",
-    image: "/projects/attendence.png",
+    image: projectImage("attendence.png"),
     link: "https://github.com/vidu1999/sstudent_attendence_system",
   },
   {
@@ -119,7 +123,7 @@ export const projectsData = [
     glowColor: "rgba(236,72,153,0.6)",
     techIcon: "▶",
     date: "2022-10-01",
-    image: "/projects/multi.png",
+    image: projectImage("multi.png"),
     link: "https://github.com/vidu1999/muliplayergame",
   },
   {
@@ -134,7 +138,7 @@ export const projectsData = [
     glowColor: "rgba(6,182,212,0.6)",
     techIcon: "✦",
     date: "2022-04-18",
-    image: "/projects/learnapp.png",
+    image: projectImage("learnapp.png"),
     link: "#",
   },
   {
@@ -149,7 +153,7 @@ export const projectsData = [
     glowColor: "rgba(139,92,246,0.6)",
     techIcon: "▶",
     date: "2024-04-06",
-    image: "/projects/3dportfolio.png",
+    image: projectImage("3dportfolio.png"),
     link: "#",
     featured: true,
   },
@@ -165,7 +169,7 @@ export const projectsData = [
     glowColor: "rgba(168,85,247,0.6)",
     techIcon: "✦",
     date: "2024-11-22",
-    image: "/projects/sign.png",
+    image: projectImage("sign.png"),
     link: "https://github.com/vidu1999/dumb_language_identification_system",
   },
   {
@@ -180,7 +184,7 @@ export const projectsData = [
     glowColor: "rgba(99,102,241,0.6)",
     techIcon: "✦",
     date: "2024-08-14",
-    image: "/projects/rental.png",
+    image: projectImage("rental.png"),
     link: "#",
   },
   {
@@ -195,7 +199,7 @@ export const projectsData = [
     glowColor: "rgba(20,184,166,0.6)",
     techIcon: "✦",
     date: "2025-05-04",
-    image: "/projects/maintaince.png",
+    image: projectImage("maintaince.png"),
     link: "#",
   },
 ];
