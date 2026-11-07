@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 /**
- * Futuristic launch platform: stacked metallic black discs, concentric green
+ * Futuristic launch platform: stacked metallic black discs, concentric cyan
  * edge strips, and an energy pulse that expands outward across the surface.
  */
 
@@ -45,7 +45,7 @@ const PULSE_VERT = /* glsl */ `
 export default function Platform({ radius = 3.1, reducedMotion = false, ...props }) {
   const pulse = useRef(null);
   const uniforms = useMemo(
-    () => ({ uTime: { value: 0 }, uColor: { value: new THREE.Color('#22ff5e') } }),
+    () => ({ uTime: { value: 0 }, uColor: { value: new THREE.Color('#76e6ff') } }),
     []
   );
 
@@ -70,18 +70,18 @@ export default function Platform({ radius = 3.1, reducedMotion = false, ...props
       {tiers.map((t, i) => (
         <mesh key={i} position={[0, t.y, 0]} receiveShadow>
           <cylinderGeometry args={[t.r, t.r * 1.02, t.h, 72]} />
-          <meshStandardMaterial color="#070c0a" metalness={0.78} roughness={0.44} envMapIntensity={0.5} />
+          <meshStandardMaterial color="#070d1c" metalness={0.78} roughness={0.44} envMapIntensity={0.5} />
         </mesh>
       ))}
 
-      {/* Green glowing edge strips on each tier */}
+      {/* Cyan glowing edge strips on each tier */}
       {tiers.map((t, i) => (
         <mesh key={`strip-${i}`} position={[0, t.y + t.h / 2 + 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[t.r * 0.945, t.r, 96]} />
           <meshBasicMaterial
-            color="#4dff7d"
+            color="#3eb7ff"
             transparent
-            opacity={1.0 - i * 0.14}
+            opacity={0.85 - i * 0.14}
             side={THREE.DoubleSide}
             blending={THREE.AdditiveBlending}
             depthWrite={false}
@@ -109,7 +109,7 @@ export default function Platform({ radius = 3.1, reducedMotion = false, ...props
       <mesh position={[0, 0.19, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[radius * 0.285, radius * 0.365, 80]} />
         <meshBasicMaterial
-          color="#39ff6a"
+          color="#76e6ff"
           transparent
           opacity={1}
           side={THREE.DoubleSide}

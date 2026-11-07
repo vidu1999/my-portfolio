@@ -147,12 +147,18 @@ export function useLoadingProgress({ minDuration = 2600, assets = [], enabled = 
       if (overdue) allDone = true;
 
       const target = allDone ? 100 : Math.min(99, (earned / TOTAL_WEIGHT) * 100);
-      // Exponential ease, frame-rate independent.
-      r.value += (target - r.value) * (1 - Math.exp(-4.2 * dt));
+      // Exponential ease, frame-rate independent. Clamped so the bar can never
+      // travel backwards: a progress indicator must be monotonic even if a
+      // readiness signal ever reports a smaller fraction than it did before.
+      const eased = r.value + (target - r.value) * (1 - Math.exp(-4.2 * dt));
+      r.value = Math.max(r.value, eased);
       if (allDone && target - r.value < 0.6) r.value = 100;
       if (overdue && r.value > 96) r.value = 100;
 
-      const shown = Math.min(allDone ? 100 : 99, Math.round(r.value));
+      const shown = Math.max(
+        r.lastInt,
+        Math.min(allDone ? 100 : 99, Math.round(r.value))
+      );
       if (shown !== r.lastInt) {
         r.lastInt = shown;
         setPercent(shown);

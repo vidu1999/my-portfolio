@@ -205,10 +205,11 @@ export default function LoadingScreen() {
         <LoadingScene
           onReady={handleSceneReady}
           reducedMotion={reducedMotion}
-          // Stop drawing once loading finishes: the ready-hold and fade don't
-          // need a live scene, and freeing the main thread lets the exit timers
-          // fire promptly on weak GPUs instead of being starved by render work.
-          visible={tabVisible && !gone && !complete}
+          // Pause once loading finishes so the ready-hold and fade timers aren't
+          // starved by render work on weak GPUs. The last frame survives because
+          // the renderer uses preserveDrawingBuffer. Preview mode keeps drawing
+          // so the animation can be reviewed indefinitely.
+          visible={tabVisible && !gone && (!complete || previewMode)}
         />
       ) : (
         <FallbackCube />

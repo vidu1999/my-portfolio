@@ -38,9 +38,9 @@ function shapeFrom(points, offsetX) {
 }
 
 const LETTERS = [
-  { key: 'V', points: V_POINTS, offset: 0.0, green: false },
-  { key: 'K', points: K_POINTS, offset: 0.80, green: true },
-  { key: 'J', points: J_POINTS, offset: 1.62, green: false },
+  { key: 'V', points: V_POINTS, offset: 0.0, accent: false },
+  { key: 'K', points: K_POINTS, offset: 0.80, accent: true },
+  { key: 'J', points: J_POINTS, offset: 1.62, accent: false },
 ];
 
 const TOTAL_WIDTH = 2.36;
@@ -56,23 +56,23 @@ export default function VkjLogo({ scale = 1, ...props }) {
       bevelSegments: 3,
       curveSegments: 2,
     };
-    return LETTERS.map(({ key, points, offset, green }) => {
+    return LETTERS.map(({ key, points, offset, accent }) => {
       const geo = new THREE.ExtrudeGeometry(shapeFrom(points, offset), settings);
       // Centre the whole word on the origin, and centre depth on z = 0.
       geo.translate(-TOTAL_WIDTH / 2, -0.5, -settings.depth / 2);
       geo.computeVertexNormals();
-      return { key, geo, green };
+      return { key, geo, accent };
     });
   }, []);
 
   return (
     <group scale={scale} {...props}>
-      {geometries.map(({ key, geo, green }) => (
+      {geometries.map(({ key, geo, accent }) => (
         <mesh key={key} geometry={geo} castShadow={false} receiveShadow={false}>
-          {green ? (
+          {accent ? (
             <meshStandardMaterial
-              color="#00e63c"
-              emissive="#12ff4e"
+              color="#3eb7ff"
+              emissive="#76e6ff"
               emissiveIntensity={0.85}
               metalness={0.55}
               roughness={0.22}

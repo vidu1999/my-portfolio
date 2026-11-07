@@ -57,7 +57,7 @@ const FLOOR_FRAG = /* glsl */ `
 function GridFloor({ reducedMotion }) {
   const mat = useRef(null);
   const uniforms = useMemo(
-    () => ({ uTime: { value: 0 }, uColor: { value: new THREE.Color('#1cff5c') } }),
+    () => ({ uTime: { value: 0 }, uColor: { value: new THREE.Color('#1cc8ff') } }),
     []
   );
   useFrame((state) => {
@@ -109,11 +109,11 @@ function ridgeGeometry(seed, width, height, segments) {
 function Mountains() {
   const ridges = useMemo(
     () => [
-      { geo: ridgeGeometry(7, 40, 10.5, 72), pos: [-21, 0, -24], color: '#040906', op: 1 },
-      { geo: ridgeGeometry(23, 40, 9.6, 72), pos: [22, 0, -23], color: '#040906', op: 1 },
-      { geo: ridgeGeometry(51, 64, 5.4, 50), pos: [-4, 0, -42], color: '#020604', op: 1 },
-      { geo: ridgeGeometry(97, 26, 5.2, 44), pos: [-23, 0, -11], color: '#010402', op: 1 },
-      { geo: ridgeGeometry(131, 26, 4.8, 44), pos: [24, 0, -11], color: '#010402', op: 1 },
+      { geo: ridgeGeometry(7, 40, 10.5, 72), pos: [-21, 0, -24], color: '#050a18', op: 1 },
+      { geo: ridgeGeometry(23, 40, 9.6, 72), pos: [22, 0, -23], color: '#050a18', op: 1 },
+      { geo: ridgeGeometry(51, 64, 5.4, 50), pos: [-4, 0, -42], color: '#04081a', op: 1 },
+      { geo: ridgeGeometry(97, 26, 5.2, 44), pos: [-23, 0, -11], color: '#02050f', op: 1 },
+      { geo: ridgeGeometry(131, 26, 4.8, 44), pos: [24, 0, -11], color: '#02050f', op: 1 },
     ],
     []
   );
@@ -121,7 +121,7 @@ function Mountains() {
     <group>
       {ridges.map((r, i) => (
         <mesh key={i} geometry={r.geo} position={r.pos}>
-          {/* Near-black rock with a green rim rising from the valley floor. */}
+          {/* Near-black rock with a cyan rim rising from the valley floor. */}
           <shaderMaterial
             transparent
             side={THREE.DoubleSide}
@@ -140,7 +140,7 @@ function Mountains() {
                 // Narrow band hugging the valley floor; pure black below it so
                 // the skirt that hides the silhouette's bottom edge stays invisible.
                 float rim = smoothstep(2.4, 0.15, vY) * smoothstep(-0.5, 0.45, vY);
-                vec3 c = uBase + vec3(0.05, 0.40, 0.17) * rim * 0.62;
+                vec3 c = uBase + vec3(0.10, 0.32, 0.52) * rim * 0.62;
                 gl_FragColor = vec4(c, 1.0);
               }
             `}
@@ -205,7 +205,7 @@ function Particles({ count = 220, reducedMotion }) {
   }, [count]);
 
   const uniforms = useMemo(
-    () => ({ uTime: { value: 0 }, uColor: { value: new THREE.Color('#6bff9d') } }),
+    () => ({ uTime: { value: 0 }, uColor: { value: new THREE.Color('#6bd8ff') } }),
     []
   );
 
@@ -264,7 +264,7 @@ function FloatingCubes({ reducedMotion }) {
         <group key={i} position={f.pos} scale={f.size}>
           <mesh geometry={boxGeo}>
             <meshPhysicalMaterial
-              color="#a8f0c4"
+              color="#a8d8f0"
               transparent
               opacity={0.16}
               roughness={0.04}
@@ -276,7 +276,7 @@ function FloatingCubes({ reducedMotion }) {
             />
           </mesh>
           <lineSegments geometry={edgeGeo}>
-            <lineBasicMaterial color="#4dff85" transparent opacity={0.95} toneMapped={false} />
+            <lineBasicMaterial color="#76e6ff" transparent opacity={0.95} toneMapped={false} />
           </lineSegments>
         </group>
       ))}
@@ -322,7 +322,7 @@ function LightShafts({ reducedMotion }) {
                 float x = 1.0 - abs(vUv.x - 0.5) * 2.0;
                 float y = smoothstep(0.0, 0.35, vUv.y) * smoothstep(1.0, 0.55, vUv.y);
                 float a = pow(max(x, 0.0), 2.6) * y;
-                gl_FragColor = vec4(vec3(0.13, 1.0, 0.42) * a, a * 0.30);
+                gl_FragColor = vec4(vec3(0.46, 0.90, 1.0) * a, a * 0.30);
               }
             `}
           />
