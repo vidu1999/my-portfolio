@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { publicAsset } from '@/app/lib/publicAsset';
 import { setRenderPaused } from '@/app/lib/renderPause';
 import { useLoadingProgress } from './useLoadingProgress';
+import { paletteVars } from './palette';
 import Hud from './Hud';
 import Terminal from './Terminal';
 import './loading.css';
@@ -58,6 +59,14 @@ function FallbackCube() {
     </div>
   );
 }
+
+// Palette custom properties + basePath-safe plate URLs. Kept at module scope so
+// the style object is stable across renders.
+const ROOT_STYLE = {
+  ...paletteVars,
+  '--vkj-plate': `url("${publicAsset('loader/env-plate.webp')}")`,
+  '--vkj-plate-sm': `url("${publicAsset('loader/env-plate-sm.webp')}")`,
+};
 
 export default function LoadingScreen() {
   // Null until mounted: the server always renders the overlay markup so the
@@ -193,6 +202,7 @@ export default function LoadingScreen() {
   return (
     <div
       className={`vkj-root${shownComplete ? ' vkj-ready' : ''}`}
+      style={ROOT_STYLE}
       data-leaving={leaving ? 'true' : 'false'}
       role="progressbar"
       aria-label="Loading portfolio"
@@ -201,6 +211,8 @@ export default function LoadingScreen() {
       aria-valuenow={shownPercent}
       aria-busy={!shownComplete}
     >
+      <div className="vkj-plate" />
+
       {resolved && webgl && mountScene ? (
         <LoadingScene
           onReady={handleSceneReady}
@@ -218,7 +230,7 @@ export default function LoadingScreen() {
       <div className="vkj-atmos" />
       <div className="vkj-vignette" />
       <Hud />
-      <Terminal reducedMotion={reducedMotion} />
+      <Terminal reducedMotion={reducedMotion} flush={shownComplete} />
 
       <div className="vkj-load">
         <h2 className="vkj-title">

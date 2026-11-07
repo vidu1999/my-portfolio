@@ -3,9 +3,10 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { PALETTE } from '../palette';
 
 /**
- * Futuristic launch platform: stacked metallic black discs, concentric cyan
+ * Futuristic launch platform: stacked metallic black discs, concentric neon
  * edge strips, and an energy pulse that expands outward across the surface.
  */
 
@@ -45,7 +46,7 @@ const PULSE_VERT = /* glsl */ `
 export default function Platform({ radius = 3.1, reducedMotion = false, ...props }) {
   const pulse = useRef(null);
   const uniforms = useMemo(
-    () => ({ uTime: { value: 0 }, uColor: { value: new THREE.Color('#76e6ff') } }),
+    () => ({ uTime: { value: 0 }, uColor: { value: new THREE.Color(PALETTE.accent) } }),
     []
   );
 
@@ -70,18 +71,18 @@ export default function Platform({ radius = 3.1, reducedMotion = false, ...props
       {tiers.map((t, i) => (
         <mesh key={i} position={[0, t.y, 0]} receiveShadow>
           <cylinderGeometry args={[t.r, t.r * 1.02, t.h, 72]} />
-          <meshStandardMaterial color="#070d1c" metalness={0.78} roughness={0.44} envMapIntensity={0.5} />
+          <meshStandardMaterial color={PALETTE.metal} metalness={0.78} roughness={0.44} envMapIntensity={0.5} />
         </mesh>
       ))}
 
-      {/* Cyan glowing edge strips on each tier */}
+      {/* Neon glowing edge strips on each tier */}
       {tiers.map((t, i) => (
         <mesh key={`strip-${i}`} position={[0, t.y + t.h / 2 + 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[t.r * 0.945, t.r, 96]} />
           <meshBasicMaterial
-            color="#3eb7ff"
+            color={PALETTE.glow}
             transparent
-            opacity={0.85 - i * 0.14}
+            opacity={0.62 - i * 0.10}
             side={THREE.DoubleSide}
             blending={THREE.AdditiveBlending}
             depthWrite={false}
@@ -109,7 +110,7 @@ export default function Platform({ radius = 3.1, reducedMotion = false, ...props
       <mesh position={[0, 0.19, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[radius * 0.285, radius * 0.365, 80]} />
         <meshBasicMaterial
-          color="#76e6ff"
+          color={PALETTE.accent}
           transparent
           opacity={1}
           side={THREE.DoubleSide}
