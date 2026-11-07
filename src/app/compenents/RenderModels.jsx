@@ -2,7 +2,7 @@
 
 import React, { Suspense } from 'react';
 import clsx from 'clsx';
-import { Canvas } from '@react-three/fiber';
+import Canvas from './SafeCanvas';
 import { Environment } from '@react-three/drei';
 import { usePageVisible } from '@/app/lib/usePageVisible';
 

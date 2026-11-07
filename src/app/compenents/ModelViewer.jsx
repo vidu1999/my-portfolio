@@ -1,6 +1,7 @@
 'use client'
 import { useRef, Suspense } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
+import Canvas from './SafeCanvas';
 import { useGLTF, OrbitControls, Environment } from '@react-three/drei';
 
 function Model({ url }) {
