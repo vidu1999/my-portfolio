@@ -5,6 +5,7 @@ import Slider from "react-slick";
 import Image from "next/image";
 import { Quote, Star } from "lucide-react";
 import { personData } from "/src/app/data";
+import { publicAsset } from "@/app/lib/publicAsset";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
@@ -39,7 +40,7 @@ const PersonList = () => {
                 <div className="flex min-h-[320px] flex-col items-center rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(13,18,39,.92),rgba(8,11,25,.96))] px-6 py-8 text-center shadow-[0_16px_40px_rgba(0,0,0,.28)]">
                   <div className="overflow-hidden rounded-full border border-white/10 bg-white/5 p-1 shadow-[0_0_30px_rgba(99,102,241,.18)]">
                     <Image
-                      src={`/per/${project.img}`}
+                      src={publicAsset(`per/${project.img}`)}
                       alt={project.name}
                       width={96}
                       height={96}

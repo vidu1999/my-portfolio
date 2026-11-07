@@ -1,13 +1,14 @@
 "use client"
 import React, { useRef } from 'react';
 import { useGLTF } from '@react-three/drei'
+import { modelAsset } from '@/app/lib/publicAsset';
 import { useFrame } from '@react-three/fiber'
 export default function Model(props) {
   const gltf = useRef()
   
     
   
-  const { nodes, materials } = useGLTF(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/models/easel_cartoon-transformed.glb`)
+  const { nodes, materials } = useGLTF(modelAsset('easel_cartoon-transformed.glb'))
   try {let rotateDirection=1; // Initial rotation direction (1: right, -1: left) // Rotation limit in degrees
   let rotationAngle = 0;
 

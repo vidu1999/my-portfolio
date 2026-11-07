@@ -3,12 +3,12 @@
 import React, { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF, useAnimations } from "@react-three/drei";
+import { modelAsset } from '@/app/lib/publicAsset';
 
 export function Anime(props) {
   const group = useRef();
-  const { scene, animations } = useGLTF(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/models/3d+character+model.glb`);
+  const { scene, animations } = useGLTF(modelAsset('3d+character+model.glb'));
   const { actions } = useAnimations(animations, group);
-  alert("Loaded GLB with animations:", { actions, animations });
   useEffect(() => {
     // If your GLB already has an animation, it will play
     const firstAction = actions ? Object.values(actions)[0] : null;
@@ -52,4 +52,4 @@ export function Anime(props) {
   );
 }
 
-useGLTF.preload("/models//3d+character+model.glb");
+useGLTF.preload(modelAsset('3d+character+model.glb'));

@@ -3,11 +3,12 @@
 import React, { useEffect, useRef } from "react"
 import * as THREE from "three"
 import { useGLTF, useAnimations } from "@react-three/drei"
+import { modelAsset } from '@/app/lib/publicAsset';
 
 export default function Mario3D(props) {
   const group = useRef()
 
-  const { scene, animations } = useGLTF("/models/mario.glb")
+  const { scene, animations } = useGLTF(modelAsset('mario.glb'))
   const { actions, names, mixer } = useAnimations(animations, group)
 
   useEffect(() => {
@@ -45,4 +46,4 @@ export default function Mario3D(props) {
   return <primitive ref={group} object={scene} {...props} dispose={null} />
 }
 
-useGLTF.preload("/models/mario.glb")
+useGLTF.preload(modelAsset('mario.glb'))

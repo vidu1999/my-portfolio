@@ -1,10 +1,11 @@
 "use client"
 import React from 'react'
 import { useGLTF } from '@react-three/drei'
+import { modelAsset } from '@/app/lib/publicAsset';
 
 export default function Model(props) {
   // ✅ Hook called unconditionally at top level
-  const { nodes, materials } = useGLTF(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/models/low_poly_stone_arche-transformed.glb`);
+  const { nodes, materials } = useGLTF(modelAsset('low_poly_stone_arche-transformed.glb'));
   
  
   
