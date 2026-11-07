@@ -31,7 +31,7 @@ const projectItems = projectsData.map((project, index) => {
   }
 
   // Web Design
-  if (title === "E-Commerce Site" || (title === "Portfolio")) {
+  if (title === "E-Commerce Site" || title === "Portfolio" || title === "QuickBite") {
     cats.push("web");
   }
 
@@ -42,7 +42,7 @@ const projectItems = projectsData.map((project, index) => {
 
   // Advanced System
   if (title === "Arduino Car" || title === "Student Attendance System" ||
-    title === "Language Identification System" || title === "Maintenance App") {
+    title === "Language Identification System" || title === "Maintenance App" || title === "QuickBite") {
     cats.push("advanced-system");
   }
 

@@ -18,6 +18,21 @@ Websites:
 
 export const projectsData = [
   {
+    id: 12,
+    title: "QuickBite",
+    subtitle: "Food Delivery Platform",
+    description: "Customer, shop, rider, and admin apps with shared orders and live GPS delivery tracking.",
+    tech: "Web / Android",
+    badge: "LIVE",
+    badgeColor: "from-orange-500 to-amber-500",
+    borderColor: "from-orange-500 via-amber-400 to-orange-500",
+    glowColor: "rgba(249,115,22,0.6)",
+    techIcon: "✦",
+    image: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/projects/quickbite.webp`,
+    link: "https://quickbite-2ao.pages.dev/",
+    featured: true,
+  },
+  {
     id: 1,
     title: "Arduino Car",
     subtitle: "Arduino UNO Board Project",

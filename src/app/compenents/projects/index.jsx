@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Canvas } from '@react-three/fiber';
 import { ProTable } from '../models/ProTable';
+import { ErrorBoundary } from '../RenderModels';
 import { projectsData } from "@/app/data";
 
 // ─── Data ────────────────────────────────────────────────────────────────────
@@ -490,7 +491,9 @@ export default function App() {
             <ambientLight intensity={0.6} />
             <directionalLight position={[5, 5, 5]} intensity={0.8} />
             <pointLight position={[-5, 5, 5]} intensity={0.5} />
-            <ProTable scale={9} rotation={[0, -Math.PI/2, 0]} position={[-1, -1, 0]} />
+            <ErrorBoundary>
+              <ProTable scale={9} rotation={[0, -Math.PI/2, 0]} position={[-1, -1, 0]} />
+            </ErrorBoundary>
           </Canvas>
         </div>
 
@@ -532,7 +535,8 @@ export default function App() {
           {/* Navigation Controls */}
           <button
             onClick={handlePrev}
-            className="absolute left-8 md:left-24 z-50 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+            aria-label="Previous project"
+            className="absolute left-0 md:left-24 z-50 w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
             style={{
               background: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(168,85,247,0.4)",
@@ -547,7 +551,8 @@ export default function App() {
           
           <button
             onClick={handleNext}
-            className="absolute right-8 md:right-24 z-50 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+            aria-label="Next project"
+            className="absolute right-0 md:right-24 z-50 w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
             style={{
               background: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(168,85,247,0.4)",
@@ -626,7 +631,9 @@ export default function App() {
           <ambientLight intensity={0.6} />
           <directionalLight position={[5, 5, 5]} intensity={0.8} />
           <pointLight position={[-5, 5, 5]} intensity={0.5} />
-          <ProTable scale={1} rotation={[0, -Math.PI/2, 0]} position={[0, 0, 0]} />
+          <ErrorBoundary>
+            <ProTable scale={1} rotation={[0, -Math.PI/2, 0]} position={[0, 0, 0]} />
+          </ErrorBoundary>
         </Canvas>
       </div>
             </div>
