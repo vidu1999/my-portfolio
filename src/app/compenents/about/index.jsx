@@ -8,6 +8,7 @@ import Animation from "../Animation";
 import { Download } from "lucide-react";
 import { FaGithub, FaLinkedinIn, FaFacebookF } from "react-icons/fa";
 import clsx from "clsx";
+import { publicAsset } from "@/app/lib/publicAsset";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 
 /* ─────────────────────────────────────────────
@@ -271,9 +272,10 @@ const About = () => {
               {/* CTA buttons */}
               <div className="flex flex-wrap gap-4">
                 <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
-                  <Link
-                    href="/resume.pdf"
+                  <a
+                    href={publicAsset('resume.pdf')}
                     target="_blank"
+                    rel="noopener noreferrer"
                     download="ViduraKavinda_CV.pdf"
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm
                                bg-gradient-to-r from-indigo-500 to-purple-600
@@ -283,7 +285,7 @@ const About = () => {
                   >
                     <Download className="h-4 w-4 animate-bounce" strokeWidth={2} />
                     Download CV
-                  </Link>
+                  </a>
                 </motion.div>
 
                 <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>

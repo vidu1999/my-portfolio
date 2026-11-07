@@ -1,4 +1,3 @@
-"use client"
 import Corsorfy from "../compenents/Corsorfy";
 import HomeBtn from "/src/app/compenents/HomeBtn";
 export default function SubPagesLayout({ children }) {

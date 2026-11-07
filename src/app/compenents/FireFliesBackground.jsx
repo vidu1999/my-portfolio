@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { ImgList } from '/src/app/data';
 import { iconAsset } from '@/app/lib/publicAsset';
 import Image from 'next/image';
+import { usePageVisible } from '@/app/lib/usePageVisible';
 const getRandomImage = () => {
     const randomIndex = Math.floor(Math.random() * ImgList.length); // Generate a random index
     return ImgList[randomIndex].name; // Return the image object
@@ -22,9 +23,11 @@ img:`${getRandomImage()}`
 const FireFliesBackground = () =>{
 
 const [fireflies, setFireflies] = useState([])
+const pageVisible = usePageVisible()
 //const randomImage = getRandomImage();
 useEffect(() => {
-    
+    if (!pageVisible) return;
+
     const addFireflyPeriodically = () => {
     const newFirefly = createFirefly();
     setFireflies(currentFireflies =>
@@ -36,7 +39,7 @@ useEffect(() => {
 
 return () => clearInterval(interval)
 
- }, [])
+ }, [pageVisible])
  return (
     <div className="fixed top-0 left-0 w-full h-full z-0 overflow-hidden pointer-events-none">
     {fireflies.map((firefly) => {
@@ -49,8 +52,13 @@ return () => clearInterval(interval)
     left: firefly.left,
     animation: `move ${firefly.animationDuration} infinite alternate`
     }}
-    ><Image src={iconAsset(firefly.img)} alt={`Random Image ${firefly.img}` }  width={300} // Set width as needed
-    height={200}// Set width as needed
+    ><Image
+      src={iconAsset(firefly.img)}
+      alt={`Floating programming icon ${firefly.img}`}
+      width={300}
+      height={200}
+      loading="lazy"
+      decoding="async"
     /></div>
 );
 })}

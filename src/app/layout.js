@@ -1,21 +1,49 @@
-import { Inter } from "next/font/google";
 import "./globals.css";
 import FireFliesBackground from './compenents/FireFliesBackground';
-const inter = Inter({ subsets: ["latin"] });
+import { buildMetadata, personJsonLd, websiteJsonLd, siteName, siteUrl } from '@/app/lib/seo';
 
 export const metadata = {
-  title: "VKJ",
-  description: "VKJ PORTFOLIO",
+  metadataBase: new URL(siteUrl),
+  ...buildMetadata(),
+  applicationName: siteName,
+  authors: [{ name: siteName, url: siteUrl }],
+  creator: siteName,
+  publisher: siteName,
+  keywords: [
+    'Vidura Kavinda Jayathilake',
+    'full-stack developer',
+    'portfolio',
+    'React',
+    'Next.js',
+    'Three.js',
+    '3D portfolio',
+    'Python',
+    'Node.js',
+    'Sri Lanka',
+  ],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
+  },
+  icons: { icon: '/favicon.ico' },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <head>
-      <link href="https://fonts.googleapis.com/css2?family=Jacquard+12&display=swap" rel="stylesheet" />
-      </head>
-      <body >{children}
-      <FireFliesBackground/></body>
+      <body>
+        {children}
+        <FireFliesBackground />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+      </body>
     </html>
   );
 }

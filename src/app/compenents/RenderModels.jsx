@@ -1,50 +1,54 @@
-"use client"
-import React,{Suspense} from 'react'
-import clsx from 'clsx'
-import {Canvas} from '@react-three/fiber'
-import { Environment } from '@react-three/drei'
+'use client';
 
-// Simple error boundary to avoid crashing the page on WebGL/model load issues
+import React, { Suspense } from 'react';
+import clsx from 'clsx';
+import { Canvas } from '@react-three/fiber';
+import { Environment } from '@react-three/drei';
+import { usePageVisible } from '@/app/lib/usePageVisible';
+
+// Simple error boundary to avoid crashing the page on WebGL/model load issues.
 export class ErrorBoundary extends React.Component {
-  constructor(props){
-    super(props)
-    this.state = { hasError: false }
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
   }
-  static getDerivedStateFromError(){
-    return { hasError: true }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
   }
-  componentDidCatch(err, info){
+
+  componentDidCatch(err, info) {
     // eslint-disable-next-line no-console
-    console.error('3D ErrorBoundary caught:', err, info)
+    console.error('3D ErrorBoundary caught:', err, info);
   }
-  render(){
-    if(this.state.hasError){
-      return this.props.fallback ?? null
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback ?? null;
     }
-    return this.props.children
+    return this.props.children;
   }
 }
 
-function Fallback(){
+function RenderModels({ children, className }) {
+  const pageVisible = usePageVisible();
+
   return (
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="animate-spin rounded-full h-10 w-10 border-4 border-aqua border-t-transparent" />
-    </div>
-  )
+    <Canvas
+      className={clsx('relative h-full w-full pointer-events-none', className)}
+      dpr={[1, 1.5]}
+      frameloop={pageVisible ? 'always' : 'never'}
+      gl={{ antialias: true, powerPreference: 'low-power' }}
+      resize={{ scroll: false, debounce: { scroll: 50, resize: 100 } }}
+    >
+      <ErrorBoundary>
+        <Suspense fallback={null}>
+          {children}
+          <Environment preset="city" />
+        </Suspense>
+      </ErrorBoundary>
+    </Canvas>
+  );
 }
 
-function RenderModels({children,className}) {
-  return (
-    
-      <Canvas className={clsx("relative h-full w-full pointer-events-none",className)}>
-        <ErrorBoundary>
-          <Suspense fallback={null}>
-              {children}
-              <Environment preset='city'/>
-          </Suspense>
-        </ErrorBoundary>
-      </Canvas>
-  )
-}
-
-export default RenderModels
+export default RenderModels;

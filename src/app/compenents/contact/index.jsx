@@ -10,16 +10,23 @@ import { publicAsset } from "@/app/lib/publicAsset";
 import ContactForm from "./ContactForm";
 import { Canvas } from '@react-three/fiber';
 import { ContactMe } from '../models/ContactMe';
+import Image from "next/image";
 import Ster from "../models/Ster";
+import { usePageVisible } from "@/app/lib/usePageVisible";
 /* ─────────────────────────────────────────────────
    Floating particles
 ───────────────────────────────────────────────── */
+const seeded = (seed) => {
+  const x = Math.sin(seed * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+};
+
 const PARTICLES = Array.from({ length: 28 }, (_, i) => ({
   id: i,
-  left: `${Math.random() * 100}%`,
-  size: `${2 + Math.random() * 4}px`,
-  delay: `${Math.random() * 14}s`,
-  duration: `${8 + Math.random() * 14}s`,
+  left: `${seeded(i + 1) * 100}%`,
+  size: `${2 + seeded(i + 101) * 4}px`,
+  delay: `${seeded(i + 201) * 14}s`,
+  duration: `${8 + seeded(i + 301) * 14}s`,
   color: ["#a855f7","#06b6d4","#ec4899","#6366f1","#22d3ee","#f472b6"][i % 6],
 }));
 
@@ -69,6 +76,8 @@ function TiltCard({ children, className = "" }) {
    Animated 3-D Star / Orb
 ───────────────────────────────────────────────── */
 function SpinningOrb() {
+  const pageVisible = usePageVisible();
+
   return (
     <div className="flex h-full w-full items-center justify-center">
       <div className="relative flex h-44 w-44 items-center justify-center">
@@ -105,7 +114,13 @@ function SpinningOrb() {
           />
         ))}
       </div><div className="fixed h-[30%] w-full" >
-          <Canvas camera={{ position: [0, 0, 2], fov: 75 }}>
+          <Canvas
+            camera={{ position: [0, 0, 2], fov: 75 }}
+            dpr={[1, 1.5]}
+            frameloop={pageVisible ? 'always' : 'never'}
+            gl={{ powerPreference: 'low-power' }}
+            resize={{ scroll: false, debounce: { scroll: 50, resize: 100 } }}
+          >
             <ambientLight intensity={1.2} />
             <pointLight position={[10, 10, 10]} intensity={1} />
             <directionalLight position={[-5, 5, 5]} intensity={0.8} />
@@ -143,10 +158,14 @@ function TestimonialCard({ t, delay }) {
   className={`flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br ${t.gradient} text-xs font-bold text-white shadow-lg`}
   style={{ boxShadow: `0 0 18px ${t.glow}` }}
 >
-  <img 
-    src={publicAsset(`per/${t.img}`)} 
-    alt={t.name} 
-    className="h-full w-full object-cover rounded-2xl" 
+  <Image
+    src={publicAsset(`per/${t.img}`)}
+    alt={t.name}
+    width={40}
+    height={40}
+    loading="lazy"
+    decoding="async"
+    className="h-full w-full object-cover rounded-2xl"
   />
 </div>
         <div>
@@ -183,6 +202,7 @@ function ContactRow({ icon: Icon, label, value, gradient, glow }) {
    Main App
 ───────────────────────────────────────────────── */
 export default function App() {
+  const pageVisible = usePageVisible();
   const [submitted, setSubmitted] = useState(false);
   const [hoveredSocial, setHoveredSocial] = useState(null);
 
@@ -415,7 +435,13 @@ export default function App() {
               {/* orb column */}
               <div className="hidden rounded-3xl border border-white/[.07] bg-[radial-gradient(circle_at_50%_20%,rgba(78,168,255,.12),transparent_60%),linear-gradient(160deg,rgba(12,16,35,.98),rgba(7,10,22,.98))] lg:flex lg:items-center lg:justify-center">
                 <SpinningOrb /><div className="absolute" >
-          <Canvas camera={{ position: [0, 0, 2], fov: 75 }}>
+          <Canvas
+            camera={{ position: [0, 0, 2], fov: 75 }}
+            dpr={[1, 1.5]}
+            frameloop={pageVisible ? 'always' : 'never'}
+            gl={{ powerPreference: 'low-power' }}
+            resize={{ scroll: false, debounce: { scroll: 50, resize: 100 } }}
+          >
             <ambientLight intensity={1.2} />
             <pointLight position={[10, 10, 10]} intensity={1} />
             <directionalLight position={[-5, 5, 5]} intensity={0.8} />

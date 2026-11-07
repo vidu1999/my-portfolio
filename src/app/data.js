@@ -46,7 +46,7 @@ export const projectsData = [
     glowColor: "rgba(139,92,246,0.6)",
     techIcon: "▶",
     date: "2022-08-15",
-    image: projectImage("arduino.PNG"),
+    image: projectImage("arduino.webp"),
     link: "https://github.com/vidu1999/atduinocar",
   },
   {
@@ -61,7 +61,7 @@ export const projectsData = [
     glowColor: "rgba(236,72,153,0.6)",
     techIcon: "▶",
     date: "2023-07-10",
-    image: projectImage("cricket.png"),
+    image: projectImage("cricket.webp"),
     link: "https://github.com/vidu1999/cricketgame",
   },
   {
@@ -76,7 +76,7 @@ export const projectsData = [
     glowColor: "rgba(99,102,241,0.6)",
     techIcon: "✦",
     date: "2022-09-10",
-    image: projectImage("smartcal.png"),
+    image: projectImage("smartcal.webp"),
     link: "https://github.com/vidu1999/smartcalvulater",
   },
   {
@@ -91,7 +91,7 @@ export const projectsData = [
     glowColor: "rgba(6,182,212,0.6)",
     techIcon: "+",
     date: "2022-05-30",
-    image: projectImage("port.png"),
+    image: projectImage("port.webp"),
     link: "https://github.com/vidu1999/portfolio",
   },
   {
@@ -106,7 +106,7 @@ export const projectsData = [
     glowColor: "rgba(16,185,129,0.6)",
     techIcon: "✦",
     date: "2022-07-12",
-    image: projectImage("attendence.png"),
+    image: projectImage("attendence.webp"),
     link: "https://github.com/vidu1999/sstudent_attendence_system",
   },
   {
@@ -121,7 +121,7 @@ export const projectsData = [
     glowColor: "rgba(236,72,153,0.6)",
     techIcon: "▶",
     date: "2022-10-01",
-    image: projectImage("multi.png"),
+    image: projectImage("multi.webp"),
     link: "https://github.com/vidu1999/muliplayergame",
   },
   {
@@ -136,7 +136,7 @@ export const projectsData = [
     glowColor: "rgba(6,182,212,0.6)",
     techIcon: "✦",
     date: "2022-04-18",
-    image: projectImage("learnapp.png"),
+    image: projectImage("learnapp.webp"),
     link: "#",
   },
   {
@@ -151,7 +151,7 @@ export const projectsData = [
     glowColor: "rgba(139,92,246,0.6)",
     techIcon: "▶",
     date: "2024-04-06",
-    image: projectImage("3dportfolio.png"),
+    image: projectImage("3dportfolio.webp"),
     link: "#",
     featured: true,
   },
@@ -167,7 +167,7 @@ export const projectsData = [
     glowColor: "rgba(168,85,247,0.6)",
     techIcon: "✦",
     date: "2024-11-22",
-    image: projectImage("sign.png"),
+    image: projectImage("sign.webp"),
     link: "https://github.com/vidu1999/dumb_language_identification_system",
   },
   {
@@ -182,7 +182,7 @@ export const projectsData = [
     glowColor: "rgba(99,102,241,0.6)",
     techIcon: "✦",
     date: "2024-08-14",
-    image: projectImage("rental.png"),
+    image: projectImage("rental.webp"),
     link: "#",
   },
   {
@@ -197,7 +197,7 @@ export const projectsData = [
     glowColor: "rgba(20,184,166,0.6)",
     techIcon: "✦",
     date: "2025-05-04",
-    image: projectImage("maintaince.png"),
+    image: projectImage("maintaince.webp"),
     link: "#",
   },
 ];
@@ -214,7 +214,7 @@ export const testimonials = [
   {
     name: "Warsha Yohani",
     role: "Manager, Kavin Sweet House",
-    img: "wassi.jpg",  // Replacing avatar with img
+    img: "wassi.webp",  // Replacing avatar with img
     rating: 5,
     text: "From intuitive web applications to AI-driven solutions like sign language recognition, Warsha's technical skills, problem-solving ability, and attention to detail make her a valuable asset in any project.",
     gradient: "from-teal-500 to-blue-500",

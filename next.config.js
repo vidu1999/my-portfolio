@@ -15,6 +15,10 @@ const nextConfig = {
     unoptimized: true,
   },
   compress: false,
+  poweredByHeader: false,
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'react-icons'],
+  },
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },

@@ -51,7 +51,6 @@ gltf.current.rotation.y = (Math.PI / 180) * rotationAngle;
     // Set the rotation angle
      // Convert degrees to radians
     
-    console.log(rotationAngle);
   });  try {
   return (
     <group {...props} dispose={null}

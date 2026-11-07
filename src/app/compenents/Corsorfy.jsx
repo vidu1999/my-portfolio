@@ -5,8 +5,11 @@ import { Suspense } from "react"
 import AnimatedDroneModel from "./DroneMeetup"
 import { ErrorBoundary } from "./RenderModels"
 import { modelAsset } from "@/app/lib/publicAsset"
+import { usePageVisible } from "@/app/lib/usePageVisible"
 
 export default function Corsorfy() {
+  const pageVisible = usePageVisible()
+
   return (
     <div
       aria-hidden="true"
@@ -16,7 +19,10 @@ export default function Corsorfy() {
        style={{ pointerEvents: "none" }} // âœ… FORCE disable
         className="pointer-events-none"
         camera={{ position: [0, 0, 10], fov: 45 }}
-        gl={{ alpha: true }}
+        dpr={[1, 1.5]}
+        frameloop={pageVisible ? 'always' : 'never'}
+        gl={{ alpha: true, powerPreference: 'low-power' }}
+        resize={{ scroll: false, debounce: { scroll: 50, resize: 100 } }}
       >
         <ErrorBoundary>
           <Suspense fallback={null}>

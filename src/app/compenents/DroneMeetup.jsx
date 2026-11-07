@@ -19,6 +19,20 @@ export default function DroneMeetup({
   const mouse = useRef({ x: 0, y: 0 })
   const target = useRef(new THREE.Vector3())
   const lastDropTime = useRef(0)
+  const activeDrops = useRef(new Map())
+
+  useEffect(() => {
+    const drops = activeDrops.current
+    return () => {
+      drops.forEach(({ img, interval, fadeTimer, removeTimer }) => {
+        clearInterval(interval)
+        clearTimeout(fadeTimer)
+        clearTimeout(removeTimer)
+        img.remove()
+      })
+      drops.clear()
+    }
+  }, [])
 
   useEffect(() => {
     const idleAction = actions?.Idle || actions?.[Object.keys(actions || {})[0]]
@@ -30,13 +44,15 @@ export default function DroneMeetup({
     }
 
     if (typeof window !== 'undefined') {
-      window.addEventListener("mousemove", handleMouseMove)
+      window.addEventListener("mousemove", handleMouseMove, { passive: true })
       return () => window.removeEventListener("mousemove", handleMouseMove)
     }
   }, [actions])
 
 const dropProgrammingImage = () => {
   if (!group.current || !iconImages.length) return
+  if (document.visibilityState === 'hidden') return
+  if (activeDrops.current.size >= 12) return
 
   const worldPos = new THREE.Vector3()
   group.current.getWorldPosition(worldPos)
@@ -60,6 +76,10 @@ const dropProgrammingImage = () => {
 
   document.body.appendChild(img)
 
+  const dropId = `${Date.now()}-${Math.random()}`
+  const drop = { img, interval: null, fadeTimer: null, removeTimer: null }
+  activeDrops.current.set(dropId, drop)
+
   let currentX = startX
   let currentY = startY + 20
   let velocityY = 0
@@ -70,7 +90,7 @@ const dropProgrammingImage = () => {
 
   const groundY = window.innerHeight - 40
 
-  const timer = setInterval(() => {
+  drop.interval = setInterval(() => {
     velocityY += gravity
     currentY += velocityY
     currentX += driftX
@@ -81,16 +101,17 @@ const dropProgrammingImage = () => {
     img.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`
 
     if (currentY >= groundY) {
-      clearInterval(timer)
+      clearInterval(drop.interval)
       img.style.top = `${groundY}px`
 
-      setTimeout(() => {
+      drop.fadeTimer = setTimeout(() => {
         img.style.opacity = "0"
         img.style.transform = `translate(-50%, -50%) rotate(${rotation}deg) scale(0.85)`
       }, 10000)
 
-      setTimeout(() => {
+      drop.removeTimer = setTimeout(() => {
         img.remove()
+        activeDrops.current.delete(dropId)
       }, 11200)
     }
   }, 16)
