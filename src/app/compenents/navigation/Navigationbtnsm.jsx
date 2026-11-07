@@ -29,7 +29,6 @@ const getIcon = (icon) => {
 function Navigationbtnsm() {
     const leftIcons = BtnList.slice(0, 4);
   const rightIcons = BtnList.slice(4);
-  {console.log(leftIcons)}
   return (
     <div className="flex w-full hover:cursor-pointer z-50 justify-between">
         
@@ -43,7 +42,6 @@ function Navigationbtnsm() {
         className="text-foreground rounded-full  flex items-center justify-between custom-bg
 "
 aria-label={icon.label} name={icon.label}>
-    {console.log("hiiiii",icon)}
       <div key={index} className="lg:hidden  relative  w-14 h-14 p-4 lg:animate-spin-slow-reverse group-hover:pause hover:text-accent">
         {getIcon(icon.icon)}
         <span className="peer bg-transparent absolute top-0 left-0 w-full h-full" />

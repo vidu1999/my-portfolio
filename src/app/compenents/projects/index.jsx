@@ -1,11 +1,13 @@
 "use client"
 import { useRef, useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Canvas } from '@react-three/fiber';
 import { ProTable } from '../models/ProTable';
 import { ErrorBoundary } from '../RenderModels';
+import Image from "next/image";
 import { projectsData } from "@/app/data";
+import { publicAsset } from "@/app/lib/publicAsset";
+import { usePageVisible } from "@/app/lib/usePageVisible";
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 const projects = projectsData;
@@ -116,9 +118,13 @@ function TiltCard({ project, offset, onClick }) {
 
           {/* Image area */}
           <div className="relative overflow-hidden" style={{ height: "200px" }}>
-            <img
+            <Image
               src={project.image}
               alt={project.title}
+              width={640}
+              height={360}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
               style={{
                 transform: isHovered ? "scale(1.08)" : "scale(1)",
@@ -238,12 +244,14 @@ function StatCounter({ value, label, index }) {
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const mouseFrame = useRef(null);
+  const pendingMouse = useRef({ x: 0, y: 0 });
   const [currentIndex, setCurrentIndex] = useState(0);
-  const searchParams = useSearchParams();
+  const pageVisible = usePageVisible();
 
   useEffect(() => {
     try {
-      const target = searchParams.get("target");
+      const target = new URLSearchParams(window.location.search).get("target");
       if (target) {
         const idx = projects.findIndex((p) => p.id.toString() === target.toString());
         if (idx >= 0) {
@@ -253,7 +261,7 @@ export default function App() {
     } catch (e) {
       // ignore
     }
-  }, [searchParams]);
+  }, []);
 
   const handleNext = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % projects.length);
@@ -264,18 +272,27 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (!pageVisible) return;
+
     const handleMouse = (e) => {
-      setMousePos({
+      pendingMouse.current = {
         x: (e.clientX / window.innerWidth - 0.5) * 2,
         y: (e.clientY / window.innerHeight - 0.5) * 2,
+      };
+      if (mouseFrame.current) return;
+      mouseFrame.current = requestAnimationFrame(() => {
+        mouseFrame.current = null;
+        setMousePos(pendingMouse.current);
       });
     };
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener("mousemove", handleMouse);
-      return () => window.removeEventListener("mousemove", handleMouse);
-    }
-  }, []);
+    window.addEventListener("mousemove", handleMouse, { passive: true });
+    return () => {
+      window.removeEventListener("mousemove", handleMouse);
+      if (mouseFrame.current) cancelAnimationFrame(mouseFrame.current);
+      mouseFrame.current = null;
+    };
+  }, [pageVisible]);
 
   return (
     <div
@@ -286,7 +303,6 @@ export default function App() {
       <div
         className="absolute inset-0 z-0"
         style={{
-          backgroundImage: "url('/images/hero-bg.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center top",
           opacity: 0.35,
@@ -487,7 +503,13 @@ export default function App() {
       <div className="relative z-20 min-h-screen flex flex-col">
         {/* 3D Stage Background */}
         <div className="absolute bottom-0 left-0 right-0 z-0 rounded-3xl  h-full -mt-32">
-          <Canvas camera={{ position: [0, 2, 8], fov: 45 }}>
+          <Canvas
+            camera={{ position: [0, 2, 8], fov: 45 }}
+            dpr={[1, 1.5]}
+            frameloop={pageVisible ? 'always' : 'never'}
+            gl={{ powerPreference: 'low-power' }}
+            resize={{ scroll: false, debounce: { scroll: 50, resize: 100 } }}
+          >
             <ambientLight intensity={0.6} />
             <directionalLight position={[5, 5, 5]} intensity={0.8} />
             <pointLight position={[-5, 5, 5]} intensity={0.5} />
@@ -627,7 +649,13 @@ export default function App() {
 
                {/* ── 3D Stage Model ── */}
       <div className="absolute bottom-0 w-full -z-10 rounded-2xl overflow-hidden border border-white/10">
-        <Canvas camera={{ position: [0, 2, 8], fov: 45 }}>
+        <Canvas
+          camera={{ position: [0, 2, 8], fov: 45 }}
+          dpr={[1, 1.5]}
+          frameloop={pageVisible ? 'always' : 'never'}
+          gl={{ powerPreference: 'low-power' }}
+          resize={{ scroll: false, debounce: { scroll: 50, resize: 100 } }}
+        >
           <ambientLight intensity={0.6} />
           <directionalLight position={[5, 5, 5]} intensity={0.8} />
           <pointLight position={[-5, 5, 5]} intensity={0.5} />

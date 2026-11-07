@@ -1,30 +1,35 @@
-"use client";
-import React from 'react'
-import { Document, Page } from 'react-pdf';
-import { useState } from 'react';
-import Link from 'next/link'
-function ResumePage() {
-  const [numPages, setNumPages] = useState(null);
+import { buildMetadata } from '@/app/lib/seo';
+import { publicAsset } from '@/app/lib/publicAsset';
+
+export const metadata = buildMetadata({
+  title: 'Resume',
+  path: '/resume/',
+  description: 'View or download the resume of Vidura Kavinda Jayathilake, full-stack developer.',
+});
+
+export default function ResumePage() {
+  const resumeUrl = publicAsset('resume.pdf');
   return (
-    <><div className="flex-col justify-center space-x-4 w-full">
-   <embed 
-  src={`${process.env.NEXT_PUBLIC_BASE_PATH}/resume.pdf`} 
-  type="application/pdf" 
-  width="100%" 
-  height="600px"
-/>
-
-  </div>
-    <button
-    onClick={() => {
-      
-    }}
-    className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md"
-  >
-    <Link href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/resume.pdf`} target={"_blank"} download={"VKJ.pdf"}>Download Resume</Link> 
-  </button>
-  </>
-  )
+    <div className="flex w-full flex-col items-center justify-center gap-4">
+      <h1 className="sr-only">Resume of Vidura Kavinda Jayathilake</h1>
+      <div className="flex-col justify-center space-x-4 w-full">
+        <embed
+          src={resumeUrl}
+          type="application/pdf"
+          width="100%"
+          height="600px"
+          title="Resume of Vidura Kavinda Jayathilake"
+        />
+      </div>
+      <a
+        href={resumeUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        download="VKJ.pdf"
+        className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md"
+      >
+        Download Resume
+      </a>
+    </div>
+  );
 }
-
-export default ResumePage;

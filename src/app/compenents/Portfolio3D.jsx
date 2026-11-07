@@ -1,11 +1,13 @@
-﻿"use client";
+"use client";
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Me } from "./models/Me";
 import { Mini } from "./models/Mini";
 import RenderModels from "/src/app/compenents/RenderModels";
 import Link from 'next/link'
+import Image from 'next/image';
 import { projectsData, testimonials } from "@/app/data";
+import { usePageVisible } from "@/app/lib/usePageVisible";
 
 const tabs = [
   { key: "all", label: "All" },
@@ -163,6 +165,7 @@ function ElectricPanelBorder({ active }) {
       )}
       aria-hidden="true"
     >
+      {active && (
       <svg className="panel-electric-svg absolute h-0 w-0">
         <defs>
           <filter
@@ -200,12 +203,13 @@ function ElectricPanelBorder({ active }) {
           </filter>
         </defs>
       </svg>
+      )}
 
       <div className="panel-electric-inner">
         <div className="panel-electric-border-outer">
           <div
             className="panel-electric-main"
-            style={{ filter: `url(#${filterId})` }}
+            style={{ filter: active ? `url(#${filterId})` : undefined }}
           />
         </div>
         <div className="panel-electric-glow-1" />
@@ -221,6 +225,7 @@ function ElectricPanelBorder({ active }) {
 
 export default function PortfolioDeskReactTailwind() {
   const router = useRouter();
+  const pageVisible = usePageVisible();
   const sceneRef = useRef(null);
   const worldRef = useRef(null);
   const frameRef = useRef(null);
@@ -235,11 +240,12 @@ export default function PortfolioDeskReactTailwind() {
   const [activeTestimonialIdx, setActiveTestimonialIdx] = useState(0);
 
   useEffect(() => {
+    if (!pageVisible) return;
     const testimonialTimer = setInterval(() => {
       setActiveTestimonialIdx((prev) => (prev + 1) % testimonials.length);
     }, 6000);
     return () => clearInterval(testimonialTimer);
-  }, []);
+  }, [pageVisible]);
 
   const visibleProjects = useMemo(() => {
     return projectItems.filter((item) => filter === "all" || item.cats.includes(filter));
@@ -332,6 +338,8 @@ export default function PortfolioDeskReactTailwind() {
   }, []);
 
   useEffect(() => {
+    if (!pageVisible) return;
+
     const animateTilt = () => {
       const t = tiltRef.current;
       t.currentX += (t.targetX - t.currentX) * 0.08;
@@ -352,7 +360,7 @@ export default function PortfolioDeskReactTailwind() {
     return () => {
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, []);
+  }, [pageVisible]);
 
   const onPointerMove = (e) => {
     if (typeof window !== "undefined" && window.innerWidth <= 1080) return;
@@ -931,7 +939,15 @@ export default function PortfolioDeskReactTailwind() {
                       >
                         {project.image ? (
                           <div className="preview h-28 rounded-2xl relative overflow-hidden border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,.24)]">
-                            <img src={project.image} alt={project.title} className="absolute inset-0 w-full h-full object-cover" />
+                            <Image
+                              src={project.image}
+                              alt={project.title}
+                              width={640}
+                              height={360}
+                              loading="lazy"
+                              decoding="async"
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
                           </div>
                         ) : (
                           <Preview type={project.type} />
@@ -1095,7 +1111,15 @@ export default function PortfolioDeskReactTailwind() {
                     >
                       {work.image ? (
                         <div className="relative h-[52px] w-[68px] shrink-0 overflow-hidden rounded-[12px] border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,.24)]">
-                          <img src={work.image} alt={work.title} className="absolute inset-0 w-full h-full object-cover" />
+                          <Image
+                            src={work.image}
+                            alt={work.title}
+                            width={136}
+                            height={104}
+                            loading="lazy"
+                            decoding="async"
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
                         </div>
                       ) : (
                         <div className={cls("thumb relative h-[52px] w-[68px] shrink-0 overflow-hidden rounded-[12px] border border-white/15 bg-[linear-gradient(180deg,#213764,#101c39)]", work.thumb)} />

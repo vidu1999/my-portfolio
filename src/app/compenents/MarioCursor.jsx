@@ -3,8 +3,11 @@ import React from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import Mario3D from './models/Mario3D'
+import { usePageVisible } from '@/app/lib/usePageVisible'
 
 export default function MarioCursor() {
+  const pageVisible = usePageVisible()
+
   return (
     <div
       style={{
@@ -16,7 +19,9 @@ export default function MarioCursor() {
     >
       <Canvas
         camera={{ position: [0, 0, 35], fov: 18 }}
-        gl={{ alpha: true, antialias: true }}
+        dpr={[1, 1.5]}
+        frameloop={pageVisible ? 'always' : 'never'}
+        gl={{ alpha: true, antialias: true, powerPreference: 'low-power' }}
       >
         <ambientLight intensity={1.6} />
         <directionalLight position={[5, 5, 5]} intensity={1.5} />
