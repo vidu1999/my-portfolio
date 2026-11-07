@@ -50,13 +50,17 @@ const SCHEDULE = buildSchedule();
  * pauses as if executed before the next prompt. Ends on a bare prompt with a
  * blinking cursor. Under reduced motion the full transcript renders at once.
  */
-export default function Terminal({ reducedMotion = false }) {
+export default function Terminal({ reducedMotion = false, flush = false }) {
   const full = () => LINES.map((l) => l.length);
   const [typed, setTyped] = useState(() => (reducedMotion ? full() : [0, 0, 0, 0]));
   const [visibleLines, setVisibleLines] = useState(() => (reducedMotion ? LINES.length + 1 : 0));
   const [typing, setTyping] = useState(false);
   const raf = useRef(0);
 
+  // When loading finishes, immediately reveal whatever hasn't been typed yet.
+  // On a slow device the clamped clock can lag behind the loader; flushing keeps
+  // the transcript from being truncated mid-line, exactly as a shell prints
+  // buffered output when it catches up.
   useEffect(() => {
     if (reducedMotion) {
       setTyped(full());
@@ -65,6 +69,7 @@ export default function Terminal({ reducedMotion = false }) {
       return undefined;
     }
 
+    if (flush) return undefined;
     let last = 0;
     let elapsed = 0;
     let lastKey = '';
@@ -109,16 +114,21 @@ export default function Terminal({ reducedMotion = false }) {
 
     raf.current = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf.current);
-  }, [reducedMotion]);
+  }, [reducedMotion, flush]);
 
-  const activeLine = Math.min(visibleLines, LINES.length) - 1;
+  // Derived, so the same commit that flips the loader to READY also shows the
+  // complete transcript — no one-frame flash of truncated text.
+  const shownTyped = flush ? LINES.map((l) => l.length) : typed;
+  const shownLines = flush ? LINES.length + 1 : visibleLines;
+  const shownTyping = flush ? false : typing;
+  const activeLine = Math.min(shownLines, LINES.length) - 1;
 
   return (
     <div className="vkj-terminal" aria-hidden="true">
       {LINES.map((text, i) => {
-        if (i >= visibleLines) return null;
-        const shown = text.slice(0, typed[i] || 0);
-        const isActive = i === activeLine && visibleLines <= LINES.length;
+        if (i >= shownLines) return null;
+        const shown = text.slice(0, shownTyped[i] || 0);
+        const isActive = i === activeLine && shownLines <= LINES.length;
         return (
           <p key={i}>
             <span className="vkj-prompt">&gt;</span>
@@ -127,7 +137,7 @@ export default function Terminal({ reducedMotion = false }) {
           </p>
         );
       })}
-      {visibleLines > LINES.length && (
+      {shownLines > LINES.length && (
         <p>
           <span className="vkj-prompt">&gt;</span>
           <span className="vkj-caret" data-typing="0" />

@@ -3,11 +3,12 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { PALETTE } from '../palette';
 
 /**
  * Orbital neon rings. Each ring is a torus with an additive shader that fades
  * the tail and brightens the leading arc, so it reads as a glowing light trail
- * rather than a flat cyan hoop. Rings rotate independently on tilted axes.
+ * rather than a flat neon hoop. Rings rotate independently on tilted axes.
  */
 
 const RING_VERT = /* glsl */ `
@@ -49,7 +50,7 @@ function Ring({ radius, tube, tilt, speed, spin, offset, reducedMotion }) {
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
-      uColor: { value: new THREE.Color('#4fd4ff') },
+      uColor: { value: new THREE.Color(PALETTE.accent) },
       uSpeed: { value: speed },
       uOffset: { value: offset },
     }),

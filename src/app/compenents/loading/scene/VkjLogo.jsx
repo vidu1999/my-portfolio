@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import * as THREE from 'three';
+import { PALETTE } from '../palette';
 
 /**
  * The VKJ logotype built as real extruded 3D geometry (not a texture / flat plane).
@@ -71,11 +72,11 @@ export default function VkjLogo({ scale = 1, ...props }) {
         <mesh key={key} geometry={geo} castShadow={false} receiveShadow={false}>
           {accent ? (
             <meshStandardMaterial
-              color="#3eb7ff"
-              emissive="#76e6ff"
-              emissiveIntensity={0.85}
-              metalness={0.55}
-              roughness={0.22}
+              color={PALETTE.logoAccent}
+              emissive={PALETTE.logoEmissive}
+              emissiveIntensity={0.32}
+              metalness={0.45}
+              roughness={0.26}
               envMapIntensity={1.1}
               toneMapped={false}
             />

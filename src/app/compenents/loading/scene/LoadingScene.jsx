@@ -7,6 +7,7 @@ import VkjCube from './VkjCube';
 import OrbitalRings from './OrbitalRings';
 import Platform from './Platform';
 import SceneEnvironment from './SceneEnvironment';
+import { PALETTE } from '../palette';
 
 /**
  * The loading screen's WebGL stage.
@@ -39,13 +40,23 @@ function CameraRig({ reducedMotion, target, fitHalfWidth }) {
   const pointer = useRef({ x: 0, y: 0 });
   const current = useRef({ x: 0, y: 0 });
 
-  // Pull back on narrow/portrait viewports so the platform and rings stay
-  // inside the frame. A fixed distance crops them badly on tablets.
+  // Pull back on narrow/portrait viewports so the platform and rings stay inside
+  // the frame. A fixed distance crops them badly on tablets.
+  //
+  // Width alone is not enough: the cube is rotated, so its screen diagonal is
+  // ~1.7x its edge and on a tall viewport that diagonal grew until the rings swept
+  // across the terminal text. Fitting the vertical extent too, with headroom for
+  // the HUD, keeps the centrepiece clear of the corners at every aspect.
   const distance = useMemo(() => {
     const vFov = (camera.fov * Math.PI) / 180;
     const aspect = size.width / Math.max(size.height, 1);
-    const tanHalfH = Math.tan(vFov / 2) * aspect;
-    return Math.max(11, fitHalfWidth / Math.max(tanHalfH, 0.05));
+    const tanV = Math.tan(vFov / 2);
+    const byWidth = fitHalfWidth / Math.max(tanV * aspect, 0.05);
+    // Rotated-cube diagonal plus ring sweep, as a fraction of viewport height.
+    const portrait = aspect < 1.2;
+    const verticalExtent = fitHalfWidth * (portrait ? 1.55 : 1.15);
+    const byHeight = verticalExtent / Math.max(tanV, 0.05);
+    return Math.max(11, byWidth, byHeight);
   }, [camera, size.width, size.height, fitHalfWidth]);
 
   useEffect(() => {
@@ -84,15 +95,15 @@ function Lights({ quality }) {
   });
   return (
     <>
-      <ambientLight intensity={0.16} color="#122038" />
-      {/* Cyan key light from the platform, pulsing softly. */}
-      <pointLight ref={key} position={[0, 1.5, 0]} color="#76e6ff" intensity={1.5} distance={16} decay={2.0} />
-      <pointLight position={[0, 5.0, 3]} color="#d8ecff" intensity={1.1} distance={24} decay={1.9} />
+      <ambientLight intensity={0.16} color={PALETTE.rock} />
+      {/* Green key light from the platform, pulsing softly. */}
+      <pointLight ref={key} position={[0, 1.5, 0]} color={PALETTE.accent} intensity={1.5} distance={16} decay={2.0} />
+      <pointLight position={[0, 5.0, 3]} color="#d8ffe8" intensity={1.1} distance={24} decay={1.9} />
       {/* Cool rim so the chrome lettering reads as metal, not plastic. */}
-      <directionalLight position={[-6, 7, 6]} intensity={1.5} color="#eaf6ff" />
-      <directionalLight position={[7, 3, -5]} intensity={0.85} color="#1fc8ff" />
+      <directionalLight position={[-6, 7, 6]} intensity={1.5} color="#eafff2" />
+      <directionalLight position={[7, 3, -5]} intensity={0.85} color={PALETTE.particle} />
       {quality === 'high' && (
-        <spotLight position={[0, 12, 2]} angle={0.5} penumbra={1} intensity={1.2} color="#76e6ff" distance={30} />
+        <spotLight position={[0, 12, 2]} angle={0.5} penumbra={1} intensity={1.2} color={PALETTE.accent} distance={30} />
       )}
     </>
   );
@@ -140,11 +151,11 @@ function buildStudioTexture() {
       const accent = gauss(az + 0.35, 3.2) * smoothstep(-0.2, 0.5, dy) * 0.9;
 
       const white = ceil + boxes;
-      // Blue-dominant accent + navy base so chrome picks up the portfolio's
-      // cyan (#76e6ff) rather than a green cast.
-      const r = 0.010 + up * 0.170 + white + accent * 0.34;
-      const g = 0.015 + up * 0.202 + white + accent * 0.86;
-      const b = 0.024 + up * 0.258 + white + accent * 1.00;
+      // Green-dominant accent + near-black base, matching the environment
+      // plate's grade so chrome reflects the world it is standing in.
+      const r = 0.012 + up * 0.188 + white + accent * 0.30;
+      const g = 0.016 + up * 0.214 + white + accent * 1.00;
+      const b = 0.018 + up * 0.202 + white + accent * 0.50;
 
       const i = (y * w + x) * 4;
       // Store linear radiance directly — PMREM consumes it as HDR.
@@ -190,8 +201,10 @@ function SceneContents({ reducedMotion, quality, onReady, compact }) {
 
   return (
     <>
-      <color attach="background" args={['#04060f']} />
-      <fogExp2 attach="fog" args={['#050a18', 0.0135]} />
+      {/* No background colour: the canvas is transparent so the environment
+          plate behind it shows through. Fog still tints distant geometry so the
+          live objects sit in the same depth as the baked terrain. */}
+      <fogExp2 attach="fog" args={[PALETTE.fog, 0.019]} />
 
       <CameraRig
         reducedMotion={reducedMotion}
@@ -224,11 +237,11 @@ export default function LoadingScene({ onReady, reducedMotion = false, visible =
   useEffect(() => {
     const cores = navigator.hardwareConcurrency || 4;
     const mem = navigator.deviceMemory || 4;
-    const small = window.innerWidth < 760;
+    const small = window.innerWidth < 900;
     setCompact(small);
     if (small || cores <= 4 || mem <= 4) setQuality('low');
 
-    const onResize = () => setCompact(window.innerWidth < 760);
+    const onResize = () => setCompact(window.innerWidth < 900);
     window.addEventListener('resize', onResize, { passive: true });
     return () => window.removeEventListener('resize', onResize);
   }, []);
@@ -243,7 +256,7 @@ export default function LoadingScene({ onReady, reducedMotion = false, visible =
         gl={{
           antialias: quality === 'high',
           powerPreference: 'high-performance',
-          alpha: false,
+          alpha: true,
           stencil: false,
           depth: true,
           // Keep the last frame after the render loop is paused for the exit.
