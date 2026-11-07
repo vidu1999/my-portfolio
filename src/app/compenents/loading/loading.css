@@ -1,0 +1,458 @@
+/* ==========================================================================
+   VKJ cinematic loading screen
+   All selectors are namespaced with .vkj- so nothing here can leak into the
+   existing portfolio styles.
+   ========================================================================== */
+
+.vkj-root {
+  --vkj-green: #22ff5e;
+  --vkj-green-soft: #4dff81;
+  --vkj-green-dim: #1a8f3c;
+  --vkj-ink: #03070a;
+  --vkj-mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --vkj-display: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  overflow: hidden;
+  background: #020504;
+  color: #e8fff0;
+  contain: strict;
+}
+
+/* Instant hide on repeat visits, applied by the pre-hydration head script so
+   there is no flash of the loader before React boots. */
+html[data-vkj-seen="1"] .vkj-root {
+  display: none !important;
+}
+
+.vkj-root[data-leaving="true"] {
+  animation: vkj-fade-out 900ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+/* Opacity + transform only. A full-screen blur() filter is not compositor
+   friendly and can take seconds per frame on weak/software GPUs, stalling the
+   exit. These two properties animate on the compositor thread. */
+@keyframes vkj-fade-out {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.045); }
+}
+
+/* ---------- scene + atmosphere ------------------------------------------- */
+
+.vkj-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Volumetric green haze / light shafts. Pure CSS so it costs no GPU passes. */
+.vkj-atmos {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.vkj-atmos::before {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  background:
+    radial-gradient(58% 42% at 50% 34%, rgba(34, 255, 94, 0.10), transparent 66%),
+    radial-gradient(38% 30% at 50% 62%, rgba(34, 255, 94, 0.08), transparent 70%),
+    radial-gradient(70% 50% at 50% 100%, rgba(10, 120, 45, 0.12), transparent 72%);
+  animation: vkj-haze 9s ease-in-out infinite;
+}
+
+/* Vertical volumetric shafts, matching the reference's background columns. */
+.vkj-atmos::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 8%, rgba(34, 255, 94, 0.07) 42%, transparent 74%) 22% 0 / 2px 100% no-repeat,
+    linear-gradient(180deg, transparent 14%, rgba(34, 255, 94, 0.05) 46%, transparent 78%) 34% 0 / 1px 100% no-repeat,
+    linear-gradient(180deg, transparent 6%, rgba(34, 255, 94, 0.07) 40%, transparent 72%) 78% 0 / 2px 100% no-repeat,
+    linear-gradient(180deg, transparent 12%, rgba(34, 255, 94, 0.05) 44%, transparent 76%) 88% 0 / 1px 100% no-repeat;
+  animation: vkj-shafts 7s ease-in-out infinite;
+}
+
+@keyframes vkj-haze {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+
+@keyframes vkj-shafts {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+/* Cinematic vignette keeps the corners deep black like the reference. */
+.vkj-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 45%, transparent 42%, rgba(0, 0, 0, 0.55) 78%, rgba(0, 0, 0, 0.9) 100%);
+}
+
+/* ---------- HUD frame ---------------------------------------------------- */
+
+.vkj-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-family: var(--vkj-mono);
+}
+
+.vkj-corner {
+  position: absolute;
+  width: clamp(120px, 17vw, 268px);
+  height: clamp(88px, 13vh, 150px);
+  color: var(--vkj-green);
+  opacity: 0.75;
+}
+.vkj-corner svg { width: 100%; height: 100%; display: block; }
+.vkj-corner--tl { top: 0; left: 0; }
+.vkj-corner--tr { top: 0; right: 0; transform: scaleX(-1); }
+.vkj-corner--bl { bottom: 0; left: 0; transform: scaleY(-1); }
+.vkj-corner--br { bottom: 0; right: 0; transform: scale(-1, -1); }
+
+.vkj-brand {
+  position: absolute;
+  top: clamp(20px, 4.6vh, 46px);
+  left: clamp(26px, 3.7vw, 60px);
+  font-family: var(--vkj-display);
+  font-weight: 700;
+  font-size: clamp(15px, 1.35vw, 21px);
+  letter-spacing: 0.16em;
+  color: var(--vkj-green);
+  text-shadow: 0 0 14px rgba(34, 255, 94, 0.55);
+}
+.vkj-brand span { color: #7bffc0; opacity: 0.85; margin-left: 0.42em; font-weight: 500; }
+
+.vkj-role {
+  position: absolute;
+  top: clamp(18px, 4.2vh, 42px);
+  right: clamp(26px, 3.7vw, 60px);
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.1vw, 18px);
+  font-size: clamp(8px, 0.72vw, 11.5px);
+  letter-spacing: 0.3em;
+  color: #8ff0b3;
+  white-space: nowrap;
+}
+.vkj-role b { font-weight: 400; }
+.vkj-role i { color: var(--vkj-green); font-style: normal; opacity: 0.9; }
+
+.vkj-stripes { display: inline-flex; gap: 3px; flex: none; }
+.vkj-stripes em {
+  display: block;
+  width: clamp(7px, 0.72vw, 11px);
+  height: clamp(13px, 1.5vw, 21px);
+  background: linear-gradient(160deg, var(--vkj-green), #0f9c3c);
+  transform: skewX(-22deg);
+  box-shadow: 0 0 10px rgba(34, 255, 94, 0.5);
+}
+.vkj-stripes em:nth-child(2) { opacity: 0.78; }
+.vkj-stripes em:nth-child(3) { opacity: 0.56; }
+
+.vkj-tagline {
+  position: absolute;
+  bottom: clamp(20px, 4.4vh, 44px);
+  left: clamp(26px, 2.4vw, 40px);
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 1.4vw, 22px);
+  font-size: clamp(8px, 0.74vw, 12px);
+  letter-spacing: 0.3em;
+  color: #8ff0b3;
+  white-space: nowrap;
+}
+.vkj-tagline i { color: var(--vkj-green); font-style: normal; }
+
+/* ---------- terminal ----------------------------------------------------- */
+
+.vkj-terminal {
+  position: absolute;
+  top: 15.5%;
+  left: clamp(22px, 3.8vw, 62px);
+  font-family: var(--vkj-mono);
+  font-size: clamp(9px, 0.86vw, 14px);
+  line-height: 1.85;
+  color: #b9cfc4;
+  max-width: min(30vw, 340px);
+}
+.vkj-terminal p { margin: 0; white-space: nowrap; }
+.vkj-terminal .vkj-prompt { color: var(--vkj-green); margin-right: 0.55em; }
+.vkj-terminal .vkj-dim { color: #7e9a8b; }
+
+.vkj-caret {
+  display: inline-block;
+  width: 0.62em;
+  height: 1.02em;
+  vertical-align: -0.16em;
+  background: var(--vkj-green);
+  box-shadow: 0 0 9px rgba(34, 255, 94, 0.75);
+  animation: vkj-blink 1.05s steps(1, end) infinite;
+}
+@keyframes vkj-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+/* ---------- dot matrix --------------------------------------------------- */
+
+.vkj-dots {
+  position: absolute;
+  top: 16.5%;
+  right: clamp(26px, 4.6vw, 74px);
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: clamp(7px, 0.82vw, 13px);
+}
+.vkj-dots span {
+  width: clamp(2px, 0.24vw, 4px);
+  height: clamp(2px, 0.24vw, 4px);
+  border-radius: 50%;
+  background: var(--vkj-green);
+  opacity: 0.32;
+  animation: vkj-dot 3.4s ease-in-out infinite;
+}
+@keyframes vkj-dot {
+  0%, 100% { opacity: 0.22; }
+  50% { opacity: 0.85; box-shadow: 0 0 6px rgba(34, 255, 94, 0.8); }
+}
+
+/* ---------- loading block ------------------------------------------------ */
+
+.vkj-load {
+  position: absolute;
+  top: 66%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(700px, 46vw);
+  text-align: center;
+}
+
+.vkj-title {
+  margin: 0;
+  font-family: var(--vkj-display);
+  font-weight: 700;
+  font-size: clamp(25px, 3.45vw, 53px);
+  letter-spacing: 0.005em;
+  line-height: 1.1;
+  color: #f2f7f4;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+}
+.vkj-title b {
+  color: var(--vkj-green);
+  font-weight: 700;
+  text-shadow: 0 0 26px rgba(34, 255, 94, 0.6), 0 0 60px rgba(34, 255, 94, 0.28);
+}
+
+.vkj-bar-row {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 1.5vw, 24px);
+  margin-top: clamp(15px, 2.4vh, 28px);
+}
+
+.vkj-track {
+  position: relative;
+  flex: 1;
+  height: clamp(11px, 1.75vh, 18px);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(12, 24, 17, 0.92), rgba(6, 14, 10, 0.92));
+  border: 1px solid rgba(120, 220, 155, 0.24);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.85), 0 0 22px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.vkj-fill {
+  position: absolute;
+  inset: 1px auto 1px 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0fb840 0%, #22ff5e 55%, #6bffa4 100%);
+  box-shadow: 0 0 18px rgba(34, 255, 94, 0.75), 0 0 42px rgba(34, 255, 94, 0.35);
+  transition: width 220ms linear;
+}
+/* Travelling sheen inside the fill. */
+.vkj-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+  background-size: 46% 100%;
+  background-repeat: no-repeat;
+  animation: vkj-sheen 1.9s linear infinite;
+}
+@keyframes vkj-sheen {
+  0% { background-position: -60% 0; }
+  100% { background-position: 160% 0; }
+}
+
+/* Bright moving light at the progress edge. */
+.vkj-head {
+  position: absolute;
+  top: 50%;
+  width: clamp(16px, 1.9vw, 26px);
+  height: clamp(16px, 2.3vh, 24px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, #b6ffcd 28%, rgba(34, 255, 94, 0.65) 52%, transparent 74%);
+  transition: left 220ms linear;
+  pointer-events: none;
+}
+
+.vkj-pct {
+  flex: none;
+  min-width: 3.6em;
+  text-align: left;
+  font-family: var(--vkj-display);
+  font-weight: 600;
+  font-size: clamp(14px, 1.4vw, 22px);
+  color: var(--vkj-green);
+  text-shadow: 0 0 16px rgba(34, 255, 94, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.vkj-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 1.6vw, 26px);
+  margin-top: clamp(12px, 2.1vh, 24px);
+  font-family: var(--vkj-mono);
+  font-size: clamp(9px, 0.95vw, 15px);
+  letter-spacing: 0.26em;
+  color: #cfe9d8;
+  white-space: nowrap;
+}
+.vkj-status hr {
+  flex: none;
+  width: clamp(24px, 3.2vw, 52px);
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--vkj-green));
+  box-shadow: 0 0 8px rgba(34, 255, 94, 0.6);
+}
+.vkj-status hr:last-child { background: linear-gradient(90deg, var(--vkj-green), transparent); }
+
+.vkj-ready .vkj-title b { animation: vkj-ready-pulse 1s ease-in-out infinite; }
+@keyframes vkj-ready-pulse {
+  0%, 100% { text-shadow: 0 0 26px rgba(34, 255, 94, 0.6); }
+  50% { text-shadow: 0 0 44px rgba(34, 255, 94, 1), 0 0 90px rgba(34, 255, 94, 0.5); }
+}
+
+/* ---------- WebGL fallback ---------------------------------------------- */
+
+.vkj-fallback {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(58% 42% at 50% 34%, rgba(16, 78, 36, 0.45), transparent 70%),
+    linear-gradient(180deg, #020504 0%, #04120a 58%, #020504 100%);
+}
+/* Matches the WebGL composition: centrepiece around 34% of viewport height,
+   clear of the loading block at 66%. */
+.vkj-fallback-stage {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  transform: translate(-50%, -50%);
+  width: clamp(140px, 20vw, 260px);
+  aspect-ratio: 1;
+  perspective: 900px;
+}
+.vkj-fallback-cube {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: vkj-fb-spin 18s linear infinite;
+}
+.vkj-fallback-stage { --vkj-fb-half: calc(clamp(140px, 20vw, 260px) / 2); }
+.vkj-fallback-cube i {
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid rgba(34, 255, 94, 0.55);
+  background: linear-gradient(135deg, rgba(34, 255, 94, 0.09), rgba(34, 255, 94, 0.02));
+  box-shadow: inset 0 0 40px rgba(34, 255, 94, 0.18), 0 0 30px rgba(34, 255, 94, 0.16);
+}
+.vkj-fallback-cube i:nth-child(1) { transform: translateZ(var(--vkj-fb-half)); }
+.vkj-fallback-cube i:nth-child(2) { transform: rotateY(90deg) translateZ(var(--vkj-fb-half)); }
+.vkj-fallback-cube i:nth-child(3) { transform: rotateY(180deg) translateZ(var(--vkj-fb-half)); }
+.vkj-fallback-cube i:nth-child(4) { transform: rotateY(-90deg) translateZ(var(--vkj-fb-half)); }
+.vkj-fallback-cube i:nth-child(5) { transform: rotateX(90deg) translateZ(var(--vkj-fb-half)); }
+.vkj-fallback-cube i:nth-child(6) { transform: rotateX(-90deg) translateZ(var(--vkj-fb-half)); }
+.vkj-fallback-logo {
+  position: absolute;
+  inset: 0;
+  /* flex, not grid: grid would make each text node its own row and stack V/K/J. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--vkj-display);
+  font-weight: 700;
+  font-size: clamp(38px, 5.6vw, 82px);
+  letter-spacing: 0.02em;
+  color: #eef6f1;
+  text-shadow: 0 0 26px rgba(0,0,0,.85), 0 0 40px rgba(34,255,94,.35);
+}
+.vkj-fallback-logo b { color: var(--vkj-green); text-shadow: 0 0 24px rgba(34,255,94,.7); }
+@keyframes vkj-fb-spin {
+  0% { transform: rotateX(-16deg) rotateY(0deg); }
+  100% { transform: rotateX(-16deg) rotateY(360deg); }
+}
+
+/* ---------- responsive --------------------------------------------------- */
+
+@media (max-width: 1024px) {
+  .vkj-terminal { top: 13%; font-size: clamp(9px, 1.15vw, 12px); }
+  .vkj-dots { grid-template-columns: repeat(7, 1fr); top: 13.5%; }
+  .vkj-load { top: 65%; width: min(620px, 74vw); }
+}
+
+@media (max-width: 720px) {
+  .vkj-role b:nth-of-type(2), .vkj-role i:nth-of-type(2) { display: none; }
+  .vkj-role { letter-spacing: 0.2em; }
+  .vkj-terminal { top: 11.5%; max-width: 62vw; line-height: 1.75; }
+  .vkj-terminal p:nth-child(n + 4) { display: none; }
+  .vkj-dots { grid-template-columns: repeat(5, 1fr); top: 12%; }
+  .vkj-load { top: 62%; width: 92vw; }
+  .vkj-title { font-size: clamp(22px, 7vw, 34px); }
+  .vkj-status { letter-spacing: 0.18em; gap: 10px; }
+  .vkj-status hr { width: 20px; }
+  .vkj-corner { width: 128px; height: 92px; }
+}
+
+@media (max-width: 420px) {
+  .vkj-tagline { letter-spacing: 0.18em; gap: 10px; }
+  .vkj-terminal p:nth-child(n + 3) { display: none; }
+  .vkj-pct { min-width: 3.1em; }
+}
+
+/* Short viewports: keep the progress block clear of the footer. */
+@media (max-height: 560px) {
+  .vkj-load { top: 58%; }
+  .vkj-terminal { display: none; }
+  .vkj-dots { display: none; }
+}
+
+/* ---------- reduced motion ---------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .vkj-root *,
+  .vkj-root *::before,
+  .vkj-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .vkj-caret { opacity: 1; }
+  .vkj-root[data-leaving="true"] { animation: none; opacity: 0; }
+}

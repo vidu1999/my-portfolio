@@ -380,7 +380,9 @@ export default function PortfolioDeskReactTailwind() {
 
   return (
     <>
-      <style>{`
+      {/* dangerouslySetInnerHTML avoids React's dev hydration text-content
+          comparison on this large static CSS block (it has no dynamic values). */}
+      <style dangerouslySetInnerHTML={{ __html: `
         :root{
           --bg-1:#0a1022;
           --bg-2:#101a33;
@@ -727,7 +729,7 @@ export default function PortfolioDeskReactTailwind() {
         @media (max-width:1080px){
           body{overflow:auto!important}
         }
-      `}</style>
+      ` }} />
 
       <div className="fixed inset-0 text-[#f5fbff] overflow-hidden max-[1080px]:overflow-y-auto max-[1080px]:static max-[1080px]:min-h-screen m-0 font-[Inter,ui-sans-serif,system-ui,-apple-system,Segoe_UI,Roboto,Arial,sans-serif] ">
         <div className="bg-grid" />

@@ -1,7 +1,7 @@
 "use client"
 import { useRef, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Canvas } from '@react-three/fiber';
+import Canvas from '../SafeCanvas';
 import { ProTable } from '../models/ProTable';
 import { ErrorBoundary } from '../RenderModels';
 import Image from "next/image";

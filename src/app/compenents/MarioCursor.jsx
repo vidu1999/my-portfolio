@@ -1,6 +1,6 @@
 "use client"
 import React from 'react'
-import { Canvas } from '@react-three/fiber'
+import Canvas from './SafeCanvas'
 import { OrbitControls } from '@react-three/drei'
 import Mario3D from './models/Mario3D'
 import { usePageVisible } from '@/app/lib/usePageVisible'

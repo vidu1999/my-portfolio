@@ -8,7 +8,7 @@ import {
 import { testimonials } from "@/app/data";
 import { publicAsset } from "@/app/lib/publicAsset";
 import ContactForm from "./ContactForm";
-import { Canvas } from '@react-three/fiber';
+import Canvas from '../SafeCanvas';
 import { ContactMe } from '../models/ContactMe';
 import Image from "next/image";
 import Ster from "../models/Ster";

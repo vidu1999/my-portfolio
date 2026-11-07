@@ -1,6 +1,6 @@
 "use client"
 
-import { Canvas } from "@react-three/fiber"
+import Canvas from "./SafeCanvas"
 import { Suspense } from "react"
 import AnimatedDroneModel from "./DroneMeetup"
 import { ErrorBoundary } from "./RenderModels"

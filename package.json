@@ -34,6 +34,9 @@
   "dependencies": {
   
     
+  "@fontsource/chakra-petch": "^5.3.0",
+  
+    
   "@react-three/drei": "^9.105.2",
   
     

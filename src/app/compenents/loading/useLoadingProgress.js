@@ -1,0 +1,182 @@
+'use client';
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+/**
+ * Real loading progress — never a fake timer.
+ *
+ * Each signal carries a weight; the reported target is the weighted sum of the
+ * signals that have actually resolved. The visible value eases toward that
+ * target and is hard-capped at 99 until *every* signal is done and the minimum
+ * display time has elapsed, so the bar can never hit 100% while the app is
+ * still loading.
+ *
+ * Every signal also has a timeout so a failed request can never hang the
+ * loader forever.
+ */
+
+const SIGNALS = [
+  { id: 'document', weight: 12, timeout: 10000 },
+  { id: 'fonts', weight: 13, timeout: 8000 },
+  { id: 'scene', weight: 30, timeout: 4500 },
+  { id: 'assets', weight: 25, timeout: 6000 },
+  { id: 'mounted', weight: 10, timeout: 6000 },
+  { id: 'minimum', weight: 10, timeout: 0 },
+];
+
+const TOTAL_WEIGHT = SIGNALS.reduce((sum, s) => sum + s.weight, 0);
+const HARD_TIMEOUT = 7000;
+
+export function useLoadingProgress({ minDuration = 2600, assets = [], enabled = true } = {}) {
+  const [percent, setPercent] = useState(0);
+  const [complete, setComplete] = useState(false);
+
+  // Mutable progress record — written by signal callbacks, read by the rAF loop.
+  const record = useRef(null);
+  if (record.current === null) {
+    record.current = {
+      done: Object.create(null),
+      partial: Object.create(null),
+      start: 0,
+      value: 0,
+      lastInt: -1,
+      finished: false,
+    };
+  }
+
+  const mark = useRef((id, fraction = 1) => {
+    const r = record.current;
+    if (fraction >= 1) r.done[id] = true;
+    else r.partial[id] = Math.max(r.partial[id] || 0, fraction);
+  });
+
+  useEffect(() => {
+    if (!enabled) return undefined;
+
+    const r = record.current;
+    r.start = performance.now();
+    const timers = [];
+    const cleanups = [];
+
+    const settle = (id) => mark.current(id, 1);
+
+    // --- document readiness -------------------------------------------------
+    if (document.readyState === 'complete') settle('document');
+    else {
+      const onLoad = () => settle('document');
+      window.addEventListener('load', onLoad, { once: true });
+      cleanups.push(() => window.removeEventListener('load', onLoad));
+    }
+
+    // --- webfonts -----------------------------------------------------------
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => settle('fonts')).catch(() => settle('fonts'));
+    } else {
+      settle('fonts');
+    }
+
+    // --- React has mounted the real page ------------------------------------
+    settle('mounted');
+
+    // --- critical images actually decoded -----------------------------------
+    if (assets.length === 0) {
+      settle('assets');
+    } else {
+      let settled = 0;
+      const bump = () => {
+        settled += 1;
+        mark.current('assets', settled / assets.length);
+      };
+      assets.forEach((src) => {
+        const img = new Image();
+        let acted = false;
+        const once = () => { if (!acted) { acted = true; bump(); } };
+        img.onload = () => {
+          if (typeof img.decode === 'function') img.decode().then(once, once);
+          else once();
+        };
+        img.onerror = once; // a broken asset must not block the loader
+        img.src = src;
+        cleanups.push(() => { img.onload = null; img.onerror = null; acted = true; });
+      });
+    }
+
+    // --- minimum on-screen time ---------------------------------------------
+    timers.push(setTimeout(() => settle('minimum'), minDuration));
+
+    // --- per-signal safety timeouts ------------------------------------------
+    SIGNALS.forEach(({ id, timeout }) => {
+      if (timeout > 0) timers.push(setTimeout(() => settle(id), timeout));
+    });
+    timers.push(setTimeout(() => SIGNALS.forEach((s) => settle(s.id)), HARD_TIMEOUT));
+
+    // Authoritative completion on the wall clock. The rAF easing below can be
+    // starved on a very slow GPU, so completion must not depend on frames
+    // arriving — otherwise a weak device could sit near 100% indefinitely.
+    timers.push(setTimeout(() => {
+      if (r.finished) return;
+      r.finished = true;
+      r.value = 100;
+      r.lastInt = 100;
+      setPercent(100);
+      setComplete(true);
+    }, HARD_TIMEOUT + 1200));
+
+    // --- easing loop ----------------------------------------------------------
+    let raf = 0;
+    let prev = performance.now();
+
+    const tick = (now) => {
+      // Track real elapsed time. A tight clamp here would make the bar crawl on
+      // slow devices (few frames per second), stretching a 3s loader into 30s.
+      const dt = Math.min((now - prev) / 1000, 0.5);
+      prev = now;
+
+      let earned = 0;
+      let allDone = true;
+      for (const { id, weight } of SIGNALS) {
+        if (r.done[id]) earned += weight;
+        else {
+          allDone = false;
+          earned += weight * (r.partial[id] || 0);
+        }
+      }
+
+      // Absolute wall-clock guarantee: even at 1 fps the loader must finish.
+      const overdue = now - r.start > HARD_TIMEOUT + 2000;
+      if (overdue) allDone = true;
+
+      const target = allDone ? 100 : Math.min(99, (earned / TOTAL_WEIGHT) * 100);
+      // Exponential ease, frame-rate independent.
+      r.value += (target - r.value) * (1 - Math.exp(-4.2 * dt));
+      if (allDone && target - r.value < 0.6) r.value = 100;
+      if (overdue && r.value > 96) r.value = 100;
+
+      const shown = Math.min(allDone ? 100 : 99, Math.round(r.value));
+      if (shown !== r.lastInt) {
+        r.lastInt = shown;
+        setPercent(shown);
+      }
+
+      if (r.value >= 100 && allDone) {
+        if (!r.finished) { r.finished = true; setComplete(true); }
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      timers.forEach(clearTimeout);
+      cleanups.forEach((fn) => fn());
+    };
+  }, [enabled, minDuration, assets]);
+
+  // Stable identities so memoized children (the WebGL scene) never re-render
+  // just because the percentage ticked up.
+  const markSceneReady = useCallback(() => mark.current('scene', 1), []);
+  const markSceneFraction = useCallback((f) => mark.current('scene', f), []);
+
+  return { percent, complete, markSceneReady, markSceneFraction };
+}
