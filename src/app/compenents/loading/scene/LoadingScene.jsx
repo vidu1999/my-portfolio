@@ -84,15 +84,15 @@ function Lights({ quality }) {
   });
   return (
     <>
-      <ambientLight intensity={0.16} color="#12251a" />
-      {/* Green key light from the platform, pulsing softly. */}
-      <pointLight ref={key} position={[0, 1.5, 0]} color="#22ff5e" intensity={1.5} distance={16} decay={2.0} />
-      <pointLight position={[0, 5.0, 3]} color="#d8ffe8" intensity={1.1} distance={24} decay={1.9} />
+      <ambientLight intensity={0.16} color="#122038" />
+      {/* Cyan key light from the platform, pulsing softly. */}
+      <pointLight ref={key} position={[0, 1.5, 0]} color="#76e6ff" intensity={1.5} distance={16} decay={2.0} />
+      <pointLight position={[0, 5.0, 3]} color="#d8ecff" intensity={1.1} distance={24} decay={1.9} />
       {/* Cool rim so the chrome lettering reads as metal, not plastic. */}
-      <directionalLight position={[-6, 7, 6]} intensity={1.5} color="#eafff2" />
-      <directionalLight position={[7, 3, -5]} intensity={0.85} color="#1fff63" />
+      <directionalLight position={[-6, 7, 6]} intensity={1.5} color="#eaf6ff" />
+      <directionalLight position={[7, 3, -5]} intensity={0.85} color="#1fc8ff" />
       {quality === 'high' && (
-        <spotLight position={[0, 12, 2]} angle={0.5} penumbra={1} intensity={1.2} color="#39ff6a" distance={30} />
+        <spotLight position={[0, 12, 2]} angle={0.5} penumbra={1} intensity={1.2} color="#76e6ff" distance={30} />
       )}
     </>
   );
@@ -137,12 +137,14 @@ function buildStudioTexture() {
                 // Broad frontal softbox so camera-facing chrome reads silver.
                 + gauss(az - 1.5708, 1.7) * 2.4;
       boxes *= smoothstep(-0.55, 0.15, dy) * smoothstep(0.98, 0.30, dy);
-      const green = gauss(az + 0.35, 3.2) * smoothstep(-0.2, 0.5, dy) * 0.9;
+      const accent = gauss(az + 0.35, 3.2) * smoothstep(-0.2, 0.5, dy) * 0.9;
 
       const white = ceil + boxes;
-      const r = 0.012 + up * 0.188 + white + green * 0.30;
-      const g = 0.016 + up * 0.214 + white + green * 1.00;
-      const b = 0.018 + up * 0.202 + white + green * 0.50;
+      // Blue-dominant accent + navy base so chrome picks up the portfolio's
+      // cyan (#76e6ff) rather than a green cast.
+      const r = 0.010 + up * 0.170 + white + accent * 0.34;
+      const g = 0.015 + up * 0.202 + white + accent * 0.86;
+      const b = 0.024 + up * 0.258 + white + accent * 1.00;
 
       const i = (y * w + x) * 4;
       // Store linear radiance directly — PMREM consumes it as HDR.
@@ -188,8 +190,8 @@ function SceneContents({ reducedMotion, quality, onReady, compact }) {
 
   return (
     <>
-      <color attach="background" args={['#020504']} />
-      <fogExp2 attach="fog" args={['#010704', 0.0135]} />
+      <color attach="background" args={['#04060f']} />
+      <fogExp2 attach="fog" args={['#050a18', 0.0135]} />
 
       <CameraRig
         reducedMotion={reducedMotion}
@@ -244,6 +246,10 @@ export default function LoadingScene({ onReady, reducedMotion = false, visible =
           alpha: false,
           stencil: false,
           depth: true,
+          // Keep the last frame after the render loop is paused for the exit.
+          // Without this the browser discards the drawing buffer on the next
+          // composite and the scene blinks out instead of fading.
+          preserveDrawingBuffer: true,
         }}
         camera={{ position: [0, 1.15, 11], fov: 42, near: 0.1, far: 140 }}
         onCreated={({ gl }) => {

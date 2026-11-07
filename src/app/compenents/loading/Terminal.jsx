@@ -9,81 +9,128 @@ const LINES = [
   'Turning ideas into reality...',
 ];
 
+// Cadence tuned so the transcript lands in ~2.8s of timeline. The loader holds
+// for minDuration (2.6s) + ready hold (0.85s) before the fade begins at ~3.45s,
+// so every line finishes typing and is readable before the overlay leaves.
+// The previous chained-setTimeout version needed ~5.5s and got cut off.
+const START_MS = 200;
+const CHAR_MS = 12;
+const JITTER_MS = 16;
+const LINE_GAP_MS = 130;
+// Upper bound on timeline advance per frame — see the note in the rAF loop.
+const MAX_STEP_MS = 200;
+
 /**
- * Developer-terminal typing effect. Types each line character by character,
- * then leaves a blinking block cursor on the final prompt line.
- * Under reduced motion the full transcript renders immediately.
+ * Precomputed reveal schedule: one entry per character, plus the moment each
+ * line's prompt appears. Driving from a timeline instead of chaining timers
+ * keeps the cadence stable and lets a stalled main thread catch up gradually.
+ */
+function buildSchedule() {
+  const chars = [];
+  const promptAt = [];
+  let t = START_MS;
+  LINES.forEach((text, li) => {
+    promptAt.push(t);
+    for (let ci = 1; ci <= text.length; ci += 1) {
+      // Deterministic pseudo-jitter: reads as human typing, stays reproducible.
+      const jitter = ((li * 31 + ci * 17) % 11) / 10;
+      t += CHAR_MS + jitter * JITTER_MS;
+      chars.push({ li, ci, t });
+    }
+    t += LINE_GAP_MS;
+  });
+  return { chars, promptAt, endAt: t };
+}
+
+const SCHEDULE = buildSchedule();
+
+/**
+ * Live bash-style typing. Each line's `>` prompt appears, the command types out
+ * character by character with a solid block cursor tracking the caret, then
+ * pauses as if executed before the next prompt. Ends on a bare prompt with a
+ * blinking cursor. Under reduced motion the full transcript renders at once.
  */
 export default function Terminal({ reducedMotion = false }) {
-  const [typed, setTyped] = useState(() => (reducedMotion ? LINES.map((l) => l.length) : [0, 0, 0, 0]));
-  const [line, setLine] = useState(() => (reducedMotion ? LINES.length : 0));
-  const timers = useRef([]);
+  const full = () => LINES.map((l) => l.length);
+  const [typed, setTyped] = useState(() => (reducedMotion ? full() : [0, 0, 0, 0]));
+  const [visibleLines, setVisibleLines] = useState(() => (reducedMotion ? LINES.length + 1 : 0));
+  const [typing, setTyping] = useState(false);
+  const raf = useRef(0);
 
   useEffect(() => {
     if (reducedMotion) {
-      setTyped(LINES.map((l) => l.length));
-      setLine(LINES.length);
+      setTyped(full());
+      setVisibleLines(LINES.length + 1);
+      setTyping(false);
       return undefined;
     }
 
-    let cancelled = false;
-    let currentLine = 0;
-    let currentChar = 0;
+    let last = 0;
+    let elapsed = 0;
+    let lastKey = '';
 
-    const step = () => {
-      if (cancelled) return;
-      if (currentLine >= LINES.length) {
-        setLine(LINES.length);
-        return;
-      }
-      const text = LINES[currentLine];
-      currentChar += 1;
-      const li = currentLine;
-      const cc = currentChar;
-      setTyped((prev) => {
-        const next = [...prev];
-        next[li] = cc;
-        return next;
-      });
+    const frame = (now) => {
+      if (!last) last = now;
+      // Advance a virtual clock, clamped per frame. A multi-second main-thread
+      // stall (shader compilation on a weak GPU) would otherwise skip the whole
+      // transcript in one jump; clamping keeps the typing visible while still
+      // letting it catch up gradually rather than dragging.
+      elapsed += Math.min(now - last, MAX_STEP_MS);
+      last = now;
 
-      if (currentChar >= text.length) {
-        currentLine += 1;
-        currentChar = 0;
-        setLine(currentLine);
-        timers.current.push(setTimeout(step, 420));
-      } else {
-        // Slightly irregular cadence reads as human typing.
-        timers.current.push(setTimeout(step, 26 + ((currentChar * 37) % 22)));
+      const counts = [0, 0, 0, 0];
+      for (const c of SCHEDULE.chars) {
+        if (c.t > elapsed) break;
+        counts[c.li] = c.ci;
       }
+      let lines = 0;
+      for (const at of SCHEDULE.promptAt) {
+        if (at > elapsed) break;
+        lines += 1;
+      }
+      const done = elapsed >= SCHEDULE.endAt;
+      if (done) lines = LINES.length + 1;
+
+      // Active line is the last visible one that isn't complete yet.
+      const active = Math.min(lines, LINES.length) - 1;
+      const isTyping =
+        !done && active >= 0 && counts[active] > 0 && counts[active] < LINES[active].length;
+
+      // Only commit when something actually changed — avoids a render per frame.
+      const key = `${counts.join(',')}|${lines}|${isTyping}`;
+      if (key !== lastKey) {
+        lastKey = key;
+        setTyped(counts);
+        setVisibleLines(lines);
+        setTyping(isTyping);
+      }
+      if (!done) raf.current = requestAnimationFrame(frame);
     };
 
-    timers.current.push(setTimeout(step, 520));
-
-    return () => {
-      cancelled = true;
-      timers.current.forEach(clearTimeout);
-      timers.current = [];
-    };
+    raf.current = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf.current);
   }, [reducedMotion]);
+
+  const activeLine = Math.min(visibleLines, LINES.length) - 1;
 
   return (
     <div className="vkj-terminal" aria-hidden="true">
       {LINES.map((text, i) => {
-        if (i > line) return null;
+        if (i >= visibleLines) return null;
         const shown = text.slice(0, typed[i] || 0);
-        const isActive = i === line && line < LINES.length;
+        const isActive = i === activeLine && visibleLines <= LINES.length;
         return (
           <p key={i}>
             <span className="vkj-prompt">&gt;</span>
             <span className={i === 1 || i === 2 ? 'vkj-dim' : undefined}>{shown}</span>
-            {isActive && <span className="vkj-caret" />}
+            {isActive && <span className="vkj-caret" data-typing={typing ? '1' : '0'} />}
           </p>
         );
       })}
-      {line >= LINES.length && (
+      {visibleLines > LINES.length && (
         <p>
           <span className="vkj-prompt">&gt;</span>
-          <span className="vkj-caret" />
+          <span className="vkj-caret" data-typing="0" />
         </p>
       )}
     </div>

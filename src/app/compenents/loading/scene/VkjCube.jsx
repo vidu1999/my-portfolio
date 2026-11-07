@@ -65,7 +65,7 @@ function buildEdgeLines(size) {
   return geo;
 }
 
-/** Soft green tubes along every edge — gives the neon bloom the reference has. */
+/** Soft cyan tubes along every edge — gives the neon bloom the reference has. */
 function EdgeGlow({ size }) {
   const core = useRef(null);
   const halo = useRef(null);
@@ -102,11 +102,11 @@ function EdgeGlow({ size }) {
     <>
       <instancedMesh ref={core} args={[undefined, undefined, 12]} renderOrder={5}>
         <cylinderGeometry args={[r, r, 1, 6, 1, true]} />
-        <meshBasicMaterial color="#63ff96" transparent opacity={0.95} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#5fd8ff" transparent opacity={0.80} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
       </instancedMesh>
       <instancedMesh ref={halo} args={[undefined, undefined, 12]} renderOrder={4}>
         <cylinderGeometry args={[r * 4.2, r * 4.2, 1, 6, 1, true]} />
-        <meshBasicMaterial color="#22ff5e" transparent opacity={0.24} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#3eb7ff" transparent opacity={0.22} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
       </instancedMesh>
     </>
   );
@@ -123,7 +123,7 @@ export default function VkjCube({ size = 2.5, reducedMotion = false, ...props })
   const octaGeo = useMemo(() => new THREE.OctahedronGeometry(size * 0.5, 0), [size]);
   const facetGeo = useMemo(() => new THREE.IcosahedronGeometry(size * 0.44, 0), [size]);
   const edgeUniforms = useMemo(
-    () => ({ uTime: { value: 0 }, uColor: { value: new THREE.Color('#22ff5e') } }),
+    () => ({ uTime: { value: 0 }, uColor: { value: new THREE.Color('#76e6ff') } }),
     []
   );
 
@@ -165,7 +165,7 @@ export default function VkjCube({ size = 2.5, reducedMotion = false, ...props })
         <mesh renderOrder={2}>
           <boxGeometry args={[size, size, size]} />
           <meshPhysicalMaterial
-            color="#a9f5c6"
+            color="#a9d8f5"
             transparent
             opacity={0.13}
             roughness={0.035}
@@ -199,15 +199,15 @@ export default function VkjCube({ size = 2.5, reducedMotion = false, ...props })
         <group ref={innerCage}>
           <lineSegments renderOrder={1}>
             <edgesGeometry args={[cageGeo]} />
-            <lineBasicMaterial color="#2bff62" transparent opacity={0.42} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
+            <lineBasicMaterial color="#4fd4ff" transparent opacity={0.42} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
           </lineSegments>
           <lineSegments rotation={[Math.PI / 4, Math.PI / 4, 0]} renderOrder={1}>
             <edgesGeometry args={[octaGeo]} />
-            <lineBasicMaterial color="#22ff5e" transparent opacity={0.30} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
+            <lineBasicMaterial color="#76e6ff" transparent opacity={0.30} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
           </lineSegments>
           <lineSegments rotation={[0, Math.PI / 4, Math.PI / 5]} renderOrder={1}>
             <edgesGeometry args={[facetGeo]} />
-            <lineBasicMaterial color="#39ff72" transparent opacity={0.16} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
+            <lineBasicMaterial color="#5fd8ff" transparent opacity={0.16} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
           </lineSegments>
         </group>
       </group>
