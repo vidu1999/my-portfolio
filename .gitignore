@@ -20,8 +20,7 @@
 .DS_Store
 *.pem
 
-# ignore large 3D model assets (store externally or add when pushing LFS is configured)
-public/models/*.glb
+# 3D model binaries are stored in Git LFS; tracked pointer files live in public/models.
 public/projects/*.zip
 
 # debug

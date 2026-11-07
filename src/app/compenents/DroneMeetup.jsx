@@ -5,6 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber"
 import { useGLTF, useAnimations } from "@react-three/drei"
 import * as THREE from "three"
 import {ImgList} from "../data"
+import { iconAsset, modelAsset } from "@/app/lib/publicAsset"
 export default function DroneMeetup({
   glbPath,
     iconImages = ImgList.map(item => item.name),
@@ -46,7 +47,7 @@ const dropProgrammingImage = () => {
   const startY = ((-projected.y + 1) / 2) * size.height
 
   const img = document.createElement("img")
-  img.src = `${'/icon/'+iconImages[Math.floor(Math.random() * iconImages.length)]}`
+  img.src = iconAsset(iconImages[Math.floor(Math.random() * iconImages.length)])
   img.alt = "programming icon"
   img.className =
     "fixed w-10 h-10 object-contain pointer-events-none z-[9999] select-none"
@@ -118,4 +119,4 @@ const dropProgrammingImage = () => {
   return <primitive ref={group} object={scene} scale={10} />
 }
 
-useGLTF.preload(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/models/animated_drone.glb`)
+useGLTF.preload(modelAsset('animated_drone.glb'))

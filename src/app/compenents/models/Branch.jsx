@@ -1,9 +1,10 @@
 "use client"
 import React, { useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
+import { modelAsset } from '@/app/lib/publicAsset';
 
 export default function Model(props) {
-    const { nodes, materials } = useGLTF(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/models/tree_branch-transformed.glb`)
+    const { nodes, materials } = useGLTF(modelAsset('tree_branch-transformed.glb'))
   try {
 
   const gltf = useRef();

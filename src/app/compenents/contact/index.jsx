@@ -6,6 +6,7 @@ import {
   Quote, Github, Linkedin, Facebook, Twitter
 } from "lucide-react";
 import { testimonials } from "@/app/data";
+import { publicAsset } from "@/app/lib/publicAsset";
 import ContactForm from "./ContactForm";
 import { Canvas } from '@react-three/fiber';
 import { ContactMe } from '../models/ContactMe';
@@ -143,7 +144,7 @@ function TestimonialCard({ t, delay }) {
   style={{ boxShadow: `0 0 18px ${t.glow}` }}
 >
   <img 
-    src={`/per/${t.img}`} 
+    src={publicAsset(`per/${t.img}`)} 
     alt={t.name} 
     className="h-full w-full object-cover rounded-2xl" 
   />

@@ -1,12 +1,13 @@
 "use client"
 import React, { useRef , useEffect,useState} from 'react'
 import { useGLTF } from '@react-three/drei'
+import { modelAsset } from '@/app/lib/publicAsset';
 import { useFrame } from '@react-three/fiber'
 
 export default function Model(props) {
   const gltf = useRef();
   
-  const { nodes, materials } = useGLTF(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/models/low_poly_stone_arche-transformed.glb`)
+  const { nodes, materials } = useGLTF(modelAsset('low_poly_stone_arche-transformed.glb'))
 
    // Initial rotation angle
   const [scaleZ, setScaleZ] = useState(1); // Initial scale along Z-axis

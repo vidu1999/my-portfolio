@@ -16,9 +16,7 @@ Websites:
 
 */
 
-// Public image URLs must include the GitHub Pages base path in production.
-const projectImage = (filename) =>
-  `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/projects/${filename}`;
+import { projectImage } from '@/app/lib/publicAsset';
 
 export const projectsData = [
   {

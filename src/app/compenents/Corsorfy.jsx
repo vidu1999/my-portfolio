@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber"
 import { Suspense } from "react"
 import AnimatedDroneModel from "./DroneMeetup"
 import { ErrorBoundary } from "./RenderModels"
+import { modelAsset } from "@/app/lib/publicAsset"
 
 export default function Corsorfy() {
   return (
@@ -23,7 +24,7 @@ export default function Corsorfy() {
             <directionalLight position={[5, 5, 5]} intensity={2} />
 
             <AnimatedDroneModel
-              glbPath={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/models/animated_drone.glb`}
+              glbPath={modelAsset('animated_drone.glb')}
             />
           </Suspense>
         </ErrorBoundary>
