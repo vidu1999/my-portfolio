@@ -5,7 +5,7 @@ import {Canvas} from '@react-three/fiber'
 import { Environment } from '@react-three/drei'
 
 // Simple error boundary to avoid crashing the page on WebGL/model load issues
-class ErrorBoundary extends React.Component {
+export class ErrorBoundary extends React.Component {
   constructor(props){
     super(props)
     this.state = { hasError: false }
@@ -19,11 +19,7 @@ class ErrorBoundary extends React.Component {
   }
   render(){
     if(this.state.hasError){
-      return (
-        <div className="absolute inset-0 flex items-center justify-center text-sm text-white/80">
-          3D content failed to load. Please refresh the page.
-        </div>
-      )
+      return this.props.fallback ?? null
     }
     return this.props.children
   }
@@ -41,12 +37,13 @@ function RenderModels({children,className}) {
   return (
     
       <Canvas className={clsx("relative h-full w-full pointer-events-none",className)}>
-        <Suspense fallback={null}>
-            {children}
-        </Suspense>
-        <Environment preset='city'/>
-        
-      </Canvas> 
+        <ErrorBoundary>
+          <Suspense fallback={null}>
+              {children}
+              <Environment preset='city'/>
+          </Suspense>
+        </ErrorBoundary>
+      </Canvas>
   )
 }
 
