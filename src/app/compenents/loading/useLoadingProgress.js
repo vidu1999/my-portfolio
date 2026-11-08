@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { getModelSnapshot, subscribeModelReadiness } from '@/app/lib/modelReadiness';
 
 /**
  * Real loading progress — never a fake timer.
@@ -15,17 +16,24 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * loader forever.
  */
 
+// The page's 3D models dominate: the loader must stay up until they have really
+// finished, so `models` carries the largest weight and the longest timeout.
 const SIGNALS = [
-  { id: 'document', weight: 12, timeout: 10000 },
-  { id: 'fonts', weight: 13, timeout: 8000 },
-  { id: 'scene', weight: 30, timeout: 4500 },
-  { id: 'assets', weight: 25, timeout: 6000 },
-  { id: 'mounted', weight: 10, timeout: 6000 },
+  { id: 'document', weight: 10, timeout: 10000 },
+  { id: 'fonts', weight: 8, timeout: 8000 },
+  { id: 'scene', weight: 15, timeout: 4500 },
+  { id: 'assets', weight: 12, timeout: 6000 },
+  { id: 'mounted', weight: 5, timeout: 6000 },
   { id: 'minimum', weight: 10, timeout: 0 },
+  { id: 'models', weight: 40, timeout: 18000 },
 ];
 
 const TOTAL_WEIGHT = SIGNALS.reduce((sum, s) => sum + s.weight, 0);
-const HARD_TIMEOUT = 7000;
+// Raised from 7s: waiting on real models is the point, so the safety net has to
+// sit above the model timeout rather than cutting it off.
+const HARD_TIMEOUT = 20000;
+// A page with no 3D content at all must not wait for models that never register.
+const MODEL_GRACE = 3000;
 
 export function useLoadingProgress({ minDuration = 2600, assets = [], enabled = true } = {}) {
   const [percent, setPercent] = useState(0);
@@ -99,6 +107,32 @@ export function useLoadingProgress({ minDuration = 2600, assets = [], enabled = 
         img.src = src;
         cleanups.push(() => { img.onload = null; img.onerror = null; acted = true; });
       });
+    }
+
+    // --- the page's real 3D models ------------------------------------------
+    // Settles only when every registered Suspense boundary has finished, whether
+    // it resolved or errored. A 404 or an LFS pointer still counts as finished so
+    // a broken asset can never strand the loader.
+    {
+      const applyModels = () => {
+        const { pending, settled: ok, failed: bad, started } = getModelSnapshot();
+        if (started && pending === 0) {
+          settle('models');
+          return true;
+        }
+        const done = ok + bad;
+        if (done + pending > 0) mark.current('models', done / (done + pending));
+        return false;
+      };
+      if (!applyModels()) {
+        const unsub = subscribeModelReadiness(applyModels);
+        cleanups.push(unsub);
+        // No model canvas registered within the grace window => this page has
+        // no 3D content, so there is nothing to wait for.
+        timers.push(setTimeout(() => {
+          if (!getModelSnapshot().started) settle('models');
+        }, MODEL_GRACE));
+      }
     }
 
     // --- minimum on-screen time ---------------------------------------------

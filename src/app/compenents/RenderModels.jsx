@@ -1,10 +1,11 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useId } from 'react';
 import clsx from 'clsx';
 import Canvas from './SafeCanvas';
 import { Environment } from '@react-three/drei';
 import { usePageVisible } from '@/app/lib/usePageVisible';
+import { beginModelWork, endModelWork } from '@/app/lib/modelReadiness';
 
 // Simple error boundary to avoid crashing the page on WebGL/model load issues.
 export class ErrorBoundary extends React.Component {
@@ -20,6 +21,7 @@ export class ErrorBoundary extends React.Component {
   componentDidCatch(err, info) {
     // eslint-disable-next-line no-console
     console.error('3D ErrorBoundary caught:', err, info);
+    this.props.onError?.(err);
   }
 
   render() {
@@ -30,8 +32,23 @@ export class ErrorBoundary extends React.Component {
   }
 }
 
+/** Mounts only once every suspended sibling has resolved. */
+export function ModelResolved({ id }) {
+  useEffect(() => { endModelWork(id, true); }, [id]);
+  return null;
+}
+
 function RenderModels({ children, className }) {
   const pageVisible = usePageVisible();
+  const modelId = useId();
+
+  // Register as soon as the canvas wrapper exists, so a page that has 3D is
+  // known to have 3D even before the model request starts. Unmounting settles the
+  // slot so client-side navigation can never leave it pending.
+  useEffect(() => {
+    beginModelWork(modelId);
+    return () => endModelWork(modelId, false);
+  }, [modelId]);
 
   return (
     <Canvas
@@ -41,10 +58,11 @@ function RenderModels({ children, className }) {
       gl={{ antialias: true, powerPreference: 'low-power' }}
       resize={{ scroll: false, debounce: { scroll: 50, resize: 100 } }}
     >
-      <ErrorBoundary>
+      <ErrorBoundary onError={() => endModelWork(modelId, false)}>
         <Suspense fallback={null}>
           {children}
           <Environment preset="city" />
+          <ModelResolved id={modelId} />
         </Suspense>
       </ErrorBoundary>
     </Canvas>

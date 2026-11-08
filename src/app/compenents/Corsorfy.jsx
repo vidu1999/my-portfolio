@@ -1,14 +1,21 @@
 "use client"
 
 import Canvas from "./SafeCanvas"
-import { Suspense } from "react"
+import { Suspense, useEffect, useId } from "react"
 import AnimatedDroneModel from "./DroneMeetup"
-import { ErrorBoundary } from "./RenderModels"
+import { ErrorBoundary, ModelResolved } from "./RenderModels"
 import { modelAsset } from "@/app/lib/publicAsset"
 import { usePageVisible } from "@/app/lib/usePageVisible"
+import { beginModelWork, endModelWork } from "@/app/lib/modelReadiness"
 
 export default function Corsorfy() {
   const pageVisible = usePageVisible()
+  const modelId = useId()
+
+  useEffect(() => {
+    beginModelWork(modelId)
+    return () => endModelWork(modelId, false)
+  }, [modelId])
 
   return (
     <div
@@ -24,7 +31,7 @@ export default function Corsorfy() {
         gl={{ alpha: true, powerPreference: 'low-power' }}
         resize={{ scroll: false, debounce: { scroll: 50, resize: 100 } }}
       >
-        <ErrorBoundary>
+        <ErrorBoundary onError={() => endModelWork(modelId, false)}>
           <Suspense fallback={null}>
             <ambientLight intensity={1.2} />
             <directionalLight position={[5, 5, 5]} intensity={2} />
@@ -32,6 +39,7 @@ export default function Corsorfy() {
             <AnimatedDroneModel
               glbPath={modelAsset('animated_drone.glb')}
             />
+            <ModelResolved id={modelId} />
           </Suspense>
         </ErrorBoundary>
       </Canvas>
