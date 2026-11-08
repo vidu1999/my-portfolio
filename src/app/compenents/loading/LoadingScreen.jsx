@@ -43,22 +43,6 @@ function detectWebGL() {
   }
 }
 
-function FallbackCube() {
-  return (
-    <div className="vkj-fallback" aria-hidden="true">
-      <div className="vkj-fallback-stage">
-        <div className="vkj-fallback-cube">
-          <i /><i /><i /><i /><i /><i />
-        </div>
-        {/* Sibling of the rotating cube, not a child: stays upright, readable
-            and in front of the translucent faces. */}
-        <div className="vkj-fallback-logo">
-          V<b>K</b>J
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // Palette custom properties + basePath-safe plate URLs. Kept at module scope so
 // the style object is stable across renders.
@@ -223,9 +207,7 @@ export default function LoadingScreen() {
           // so the animation can be reviewed indefinitely.
           visible={tabVisible && !gone && (!complete || previewMode)}
         />
-      ) : (
-        <FallbackCube />
-      )}
+      ) : null}
 
       <div className="vkj-atmos" />
       <div className="vkj-vignette" />
