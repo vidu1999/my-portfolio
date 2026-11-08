@@ -17,8 +17,6 @@ const START_MS = 200;
 const CHAR_MS = 12;
 const JITTER_MS = 16;
 const LINE_GAP_MS = 130;
-// Upper bound on timeline advance per frame — see the note in the rAF loop.
-const MAX_STEP_MS = 200;
 
 /**
  * Precomputed reveal schedule: one entry per character, plus the moment each
@@ -70,18 +68,18 @@ export default function Terminal({ reducedMotion = false, flush = false }) {
     }
 
     if (flush) return undefined;
-    let last = 0;
-    let elapsed = 0;
+    let start = 0;
     let lastKey = '';
 
     const frame = (now) => {
-      if (!last) last = now;
-      // Advance a virtual clock, clamped per frame. A multi-second main-thread
-      // stall (shader compilation on a weak GPU) would otherwise skip the whole
-      // transcript in one jump; clamping keeps the typing visible while still
-      // letting it catch up gradually rather than dragging.
-      elapsed += Math.min(now - last, MAX_STEP_MS);
-      last = now;
+      if (!start) start = now;
+      // Real elapsed time, NOT a per-frame-clamped virtual clock. The clamp made
+      // typing fall behind on any device rendering below ~5fps, so the loader's
+      // completion flush then snapped the text to full — which read as a jump
+      // rather than someone typing. Tracking the wall clock means the transcript
+      // always prints over ~2.8s at any frame rate; a slow device simply shows
+      // fewer intermediate frames instead of lagging and jumping.
+      const elapsed = now - start;
 
       const counts = [0, 0, 0, 0];
       for (const c of SCHEDULE.chars) {

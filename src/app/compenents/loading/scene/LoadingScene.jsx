@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import VkjCube from './VkjCube';
 import OrbitalRings from './OrbitalRings';
 import Platform from './Platform';
 import SceneEnvironment from './SceneEnvironment';
@@ -194,9 +193,8 @@ function Reflections() {
 }
 
 function SceneContents({ reducedMotion, quality, onReady, compact }) {
-  // Composition tuned against the reference: cube above centre, platform below.
+  // Rings above centre, platform below.
   const cubeY = compact ? 2.05 : 2.20;
-  const cubeSize = compact ? 2.30 : 2.50;
   const platformRadius = compact ? 2.7 : 3.12;
 
   return (
@@ -218,8 +216,10 @@ function SceneContents({ reducedMotion, quality, onReady, compact }) {
 
       <Platform radius={platformRadius} reducedMotion={reducedMotion} />
 
+      {/* The VKJ glass box was removed by request. The orbital rings and the
+          platform stay, so the centrepiece still reads as an energy field rising
+          from the pad rather than an empty hole. */}
       <group position={[0, cubeY, 0]}>
-        <VkjCube size={cubeSize} reducedMotion={reducedMotion} quality={quality} />
         <OrbitalRings reducedMotion={reducedMotion} scale={compact ? 0.82 : 1} />
       </group>
 

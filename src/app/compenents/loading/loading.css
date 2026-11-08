@@ -382,66 +382,6 @@ html[data-vkj-seen="1"] .vkj-root {
   50% { text-shadow: 0 0 44px rgba(var(--vkj-accent-rgb), 1), 0 0 90px rgba(var(--vkj-accent-rgb), 0.5); }
 }
 
-/* ---------- WebGL fallback ---------------------------------------------- */
-
-.vkj-fallback {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(58% 42% at 50% 34%, rgba(24, 60, 96, 0.45), transparent 70%),
-    linear-gradient(180deg, #04060f 0%, #101a33 58%, #04060f 100%);
-}
-/* Matches the WebGL composition: centrepiece around 34% of viewport height,
-   clear of the loading block at 66%. */
-.vkj-fallback-stage {
-  position: absolute;
-  left: 50%;
-  top: 34%;
-  transform: translate(-50%, -50%);
-  width: clamp(140px, 20vw, 260px);
-  aspect-ratio: 1;
-  perspective: 900px;
-}
-.vkj-fallback-cube {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  animation: vkj-fb-spin 18s linear infinite;
-}
-.vkj-fallback-stage { --vkj-fb-half: calc(clamp(140px, 20vw, 260px) / 2); }
-.vkj-fallback-cube i {
-  position: absolute;
-  inset: 0;
-  border: 1.5px solid rgba(var(--vkj-accent-rgb), 0.55);
-  background: linear-gradient(135deg, rgba(var(--vkj-accent-rgb), 0.09), rgba(var(--vkj-accent-rgb), 0.02));
-  box-shadow: inset 0 0 40px rgba(var(--vkj-accent-rgb), 0.18), 0 0 30px rgba(var(--vkj-accent-rgb), 0.16);
-}
-.vkj-fallback-cube i:nth-child(1) { transform: translateZ(var(--vkj-fb-half)); }
-.vkj-fallback-cube i:nth-child(2) { transform: rotateY(90deg) translateZ(var(--vkj-fb-half)); }
-.vkj-fallback-cube i:nth-child(3) { transform: rotateY(180deg) translateZ(var(--vkj-fb-half)); }
-.vkj-fallback-cube i:nth-child(4) { transform: rotateY(-90deg) translateZ(var(--vkj-fb-half)); }
-.vkj-fallback-cube i:nth-child(5) { transform: rotateX(90deg) translateZ(var(--vkj-fb-half)); }
-.vkj-fallback-cube i:nth-child(6) { transform: rotateX(-90deg) translateZ(var(--vkj-fb-half)); }
-.vkj-fallback-logo {
-  position: absolute;
-  inset: 0;
-  /* flex, not grid: grid would make each text node its own row and stack V/K/J. */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--vkj-display);
-  font-weight: 700;
-  font-size: clamp(38px, 5.6vw, 82px);
-  letter-spacing: 0.02em;
-  color: var(--vkj-text);
-  text-shadow: 0 0 26px rgba(0,0,0,.85), 0 0 40px rgba(var(--vkj-accent-rgb), .35);
-}
-.vkj-fallback-logo b { color: var(--vkj-accent); text-shadow: 0 0 24px rgba(var(--vkj-accent-rgb), .7); }
-@keyframes vkj-fb-spin {
-  0% { transform: rotateX(-16deg) rotateY(0deg); }
-  100% { transform: rotateX(-16deg) rotateY(360deg); }
-}
-
 /* ---------- responsive --------------------------------------------------- */
 
 @media (max-width: 1024px) {
