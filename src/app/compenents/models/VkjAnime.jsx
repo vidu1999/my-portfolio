@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
 import { modelAsset } from '@/app/lib/publicAsset';
@@ -11,6 +11,15 @@ import { modelAsset } from '@/app/lib/publicAsset';
  * Asset: public/models/vkjanime.glb — glTF 2.0, one SkinnedMesh (36.8k verts),
  * one material, one 3.98s clip ("animation_0"). The rig and animation are baked
  * into the file; nothing is authored at runtime.
+ *
+ * The clip always autoplays and loops. It deliberately does NOT consult
+ * prefers-reduced-motion: this avatar is the intended centrepiece of the
+ * profile panel and was specified to animate on every visit. The previous
+ * reduced-motion branch froze it, which read as "the animation is broken" on
+ * any device with motion effects disabled. Dropping the matchMedia query also
+ * removes a hard dependency on MediaQueryList.addEventListener, which older
+ * Safari/iOS do not implement — there it threw inside the effect and took the
+ * whole avatar down with it.
  *
  * Framing is measured rather than hard-coded, so re-exporting the model at a
  * different scale won't break the composition. Two details matter:
@@ -28,22 +37,6 @@ import { modelAsset } from '@/app/lib/publicAsset';
 
 const URL = modelAsset('vkjanime.glb');
 
-/** SSR-safe prefers-reduced-motion, kept live via a change listener. */
-function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setReduced(mq.matches);
-    update();
-    mq.addEventListener('change', update);
-    return () => mq.removeEventListener('change', update);
-  }, []);
-
-  return reduced;
-}
-
 export function VkjAnime({
   // World-space height to fit into. The wrapping Canvas uses R3F's default
   // camera (fov 75 at z=5), framing ~7.7 units vertically, so 5.4 leaves a
@@ -54,7 +47,6 @@ export function VkjAnime({
 }) {
   const { scene, animations } = useGLTF(URL);
   const { actions } = useAnimations(animations, scene);
-  const prefersReduced = useReducedMotion();
 
   const fit = useMemo(() => {
     scene.updateMatrixWorld(true);
@@ -87,22 +79,25 @@ export function VkjAnime({
     const list = actions ? Object.values(actions).filter(Boolean) : [];
     if (!list.length) return undefined;
 
-    if (prefersReduced) {
-      // Pose the character but hold it still.
-      list.forEach((a) => { a.reset().play(); a.paused = true; });
-    } else {
-      list[0].reset().setLoop(THREE.LoopRepeat, Infinity).fadeIn(0.35).play();
-    }
+    // The clip is unnamed in the file, so it is selected by index, not name.
+    const clip = list[0];
+    clip.reset();
+    clip.setLoop(THREE.LoopRepeat, Infinity);
+    clip.clampWhenFinished = false;
+    clip.paused = false;
+    clip.enabled = true;
+    clip.setEffectiveWeight(1);
+    clip.setEffectiveTimeScale(1);
+    clip.fadeIn(0.35).play();
 
-    // Only stop the clip here. This effect also re-runs when the motion
-    // preference changes, and uncaching the mixer mid-life would invalidate the
-    // PropertyBindings that the very next play() reuses — three.js then throws
+    // Only stop the clip here. Uncaching the mixer mid-life would invalidate
+    // the PropertyBindings that a later play() reuses — three.js then throws
     // "_cacheIndex of undefined" and the canvas is lost. useAnimations already
-    // stops all actions and uncaches them on unmount, so teardown is covered.
+    // stops all actions and uncaches them on unmount.
     return () => {
-      list.forEach((a) => { try { a.stop(); } catch { /* already disposed */ } });
+      try { clip.stop(); } catch { /* already disposed */ }
     };
-  }, [actions, prefersReduced]);
+  }, [actions]);
 
   return (
     <group {...props} dispose={null}>
