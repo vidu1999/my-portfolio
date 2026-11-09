@@ -6,6 +6,8 @@ import { Mini } from "./models/Mini";
 import RenderModels from "/src/app/compenents/RenderModels";
 import Link from 'next/link'
 import Image from 'next/image';
+import ProjectActions from "./projects/ProjectActions";
+import PreviewModal from "./projects/PreviewModal";
 import { projectsData, testimonials } from "@/app/data";
 import { usePageVisible } from "@/app/lib/usePageVisible";
 
@@ -64,6 +66,9 @@ const projectItems = projectsData.map((project, index) => {
     type: ["dashboard", "astronaut", "mobile"][index % 3],
     image: project.image,
     link: project.link,
+    repo: project.repo,
+    preview: project.preview,
+    glowColor: project.glowColor,
   };
 });
 
@@ -238,6 +243,7 @@ export default function PortfolioDeskReactTailwind() {
   const [activePanel, setActivePanel] = useState("none");
   const [currentPage, setCurrentPage] = useState(0);
   const [activeTestimonialIdx, setActiveTestimonialIdx] = useState(0);
+  const [previewProject, setPreviewProject] = useState(null);
 
   useEffect(() => {
     if (!pageVisible) return;
@@ -955,21 +961,11 @@ export default function PortfolioDeskReactTailwind() {
                           <Preview type={project.type} />
                         )}
                         <div className="text-xs font-extrabold leading-[1.3] text-[#eef7ff]">{project.title}</div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (project && project.id) {
-                              router.push(`/projects?target=${project.id}`);
-                            } else {
-                              router.push('/projects');
-                            }
-                          }}
-                          className="inline-flex w-fit items-center justify-center self-start rounded-full bg-white/[.92] px-2.5 py-1.5 text-[10px] font-extrabold text-[#243252]"
-                          aria-label={`View ${project.title} project`}
-                        >
-                          View Project
-                        </button>
+                        <ProjectActions
+                          project={project}
+                          onPreview={setPreviewProject}
+                          className="mt-0.5"
+                        />
                       </article>
                     );
                   })}
@@ -1213,6 +1209,7 @@ export default function PortfolioDeskReactTailwind() {
           </div>
         </div>
       </div>
+      <PreviewModal project={previewProject} onClose={() => setPreviewProject(null)} />
     </>
   );
 }

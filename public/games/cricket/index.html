@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CRICKET 19/20 — Vidura Kavinda</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; background: #0b1020;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    color: #e8f0ff; overflow: hidden;
+  }
+  .wrap {
+    height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px; padding: 10px;
+  }
+  canvas {
+    background: #06210f; border: 2px solid rgba(118, 230, 255, .45);
+    border-radius: 8px; box-shadow: 0 0 32px rgba(118, 230, 255, .18);
+    max-height: calc(100% - 104px); max-width: 100%; touch-action: none;
+  }
+  .bar {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    justify-content: center; font-size: 11px; color: #9fb3d6; text-align: center;
+  }
+  .bar b { color: #76e6ff; }
+  button {
+    font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+    color: #0b1020; background: #76e6ff; border: 0; border-radius: 999px; padding: 7px 16px;
+  }
+  .pad { display: none; grid-template-columns: repeat(3, 44px); gap: 5px; }
+  .pad button { height: 38px; padding: 0; border-radius: 10px; }
+  .pad .up { grid-column: 2; }
+  @media (pointer: coarse) { .pad { display: grid; } }
+  #status { font-size: 11px; color: #76e6ff; min-height: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <canvas id="game" width="360" height="720" aria-label="Cricket game pitch"></canvas>
+  <div id="status">Loading assets…</div>
+  <div class="bar">
+    <span><b>Arrows</b> bowl / run</span>
+    <span><b>W A S D</b> move bat</span>
+    <button id="restart" type="button">Restart</button>
+  </div>
+  <div class="pad" aria-hidden="true">
+    <button class="up" data-key="ArrowUp">▲</button>
+    <button data-key="ArrowLeft">◀</button>
+    <button data-key="ArrowDown">▼</button>
+    <button data-key="ArrowRight">▶</button>
+  </div>
+</div>
+<script>
+/*
+ * Browser port of github.com/vidu1999/cricketgame (main.py, Pygame).
+ * Uses the original PNG artwork, unmodified, from that repo.
+ *
+ * Faithful to the source: 360x720 pitch, the same sprite start coordinates,
+ * the same movement deltas (bowl -1 / lateral 0.1, bat 0.3, runner 1), the
+ * `k` flag switching control from bowling to running, +1 run when the ball
+ * leaves the pitch, and score reset when the ball reaches the wicket zone
+ * (120 < x < 220, y <= 40).
+ *
+ * Deliberate differences: the two blocking time.sleep() calls become short
+ * non-blocking pauses (a browser must not freeze), and the unused TensorFlow
+ * import is gone. The original tested `event.type` inside the bat-collision
+ * branch, which read whatever event happened to be last; the contact behaviour
+ * here is the deterministic case that branch always fell through to.
+ */
+(function () {
+  var W = 360, H = 720;
+  var cv = document.getElementById('game');
+  var ctx = cv.getContext('2d');
+  var statusEl = document.getElementById('status');
+
+  var FILES = {
+    bg: 'CRGAMEN.png',
+    ball: 'cricket_5.png',
+    bat: 'cricket-bat_2.png',
+    player: 'player.png',
+    bplayer: 'cricket_6.png',
+    wicket: 'wicket_2.png',
+    helmet: 'cricket-helmet.png',
+    bc: 'cricket-ball_2.png'
+  };
+  var img = {}, ready = false;
+
+  var s, keys = {}, pauseUntil = 0, showWicket = false, last = 0, acc = 0, raf;
+
+  function reset() {
+    s = {
+      blX: 180, blY: 650,          // ball
+      btX: 180, btY: 60,           // bat
+      plX: 180, plY: 650,          // striker
+      bplX: 205, bplY: 20,         // bowler
+      bmoveY: 0, bmoveX: 0, bmove: 0,
+      btmoveY1: 0, btmoveY2: 0, btmoveX1: 0, btmoveX2: 0,
+      plmoveY1: 0, plmoveY2: 0, plmoveX1: 0, plmoveX2: 0,
+      score: 0, bcs: 0, k: true
+    };
+    pauseUntil = 0; showWicket = false;
+    statusEl.textContent = 'Arrows to bowl · WASD to move the bat';
+  }
+
+  function down(e) {
+    var k = e.key;
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].indexOf(k) >= 0) e.preventDefault();
+    if (keys[k]) return;
+    keys[k] = true;
+    if (!ready) return;
+    var low = k.length === 1 ? k.toLowerCase() : k;
+    if (k === 'ArrowUp' && s.k) s.bmoveY = -1;
+    if (k === 'ArrowLeft' && s.k) s.bmoveX = -0.1;
+    if (k === 'ArrowRight' && s.k) s.bmoveX = 0.1;
+    if (low === 'w') s.btmoveY1 = -0.3;
+    if (low === 's') s.btmoveY2 = 0.3;
+    if (low === 'a') s.btmoveX1 = -0.3;
+    if (low === 'd') s.btmoveX2 = 0.3;
+    if (k === 'ArrowUp' && !s.k) s.plmoveY1 = -1;
+    if (k === 'ArrowDown' && !s.k) s.plmoveY2 = 1;
+    if (k === 'ArrowLeft' && !s.k) s.plmoveX1 = -1;
+    if (k === 'ArrowRight' && !s.k) s.plmoveX2 = 1;
+  }
+
+  function up(e) {
+    var k = e.key;
+    keys[k] = false;
+    if (!ready) return;
+    var low = k.length === 1 ? k.toLowerCase() : k;
+    if (low === 'a') s.btmoveX1 = 0;
+    if (low === 's') s.btmoveY2 = 0;
+    if (low === 'w') s.btmoveY1 = 0;
+    if (low === 'd') s.btmoveX2 = 0;
+    if (k === 'ArrowLeft') s.plmoveX1 = 0;
+    if (k === 'ArrowRight') s.plmoveX2 = 0;
+    if (k === 'ArrowUp') s.plmoveY1 = 0;
+    if (k === 'ArrowDown') s.plmoveY2 = 0;
+  }
+
+  function step(now) {
+    // Ball left the pitch -> one run, back to the bowling mark.
+    if (s.blY < 0 || s.blY > H || s.blX < 0 || s.blX > W) {
+      s.bmoveY = 0; s.blY = 650; s.plY = 650;
+      s.bmoveX = 0; s.bmove = 0; s.blX = 180; s.plX = 180;
+      s.score += 1; s.k = true;
+    }
+
+    // Bat left the pitch -> reset it and the bowler.
+    if (s.btY <= 0 || s.btY >= H || s.btX < 0 || s.btX > W) {
+      s.btY = 60; s.btX = 180; s.bplY = 20; s.bplX = 205;
+      s.btmoveY1 = s.btmoveY2 = s.btmoveX1 = s.btmoveX2 = 0;
+    }
+
+    // Bat meets ball -> struck, switch to running.
+    if (s.btX - 20 <= s.blX && s.blX <= s.btX + 20 &&
+        s.btY - 20 <= s.blY && s.blY <= s.btY + 20) {
+      s.bmove = 1; s.bmoveY = 0; s.bcs += 1; s.k = false;
+    }
+
+    if (s.k && s.blY === 650) s.plX += s.bmoveX;
+
+    // Striker collects the ball -> brief pause, back to bowling.
+    if (!s.k &&
+        s.plX - 10 <= s.blX && s.blX <= s.plX + 10 &&
+        s.plY - 10 <= s.blY && s.blY <= s.plY + 10) {
+      s.blY = 650; s.plY = 650; s.blX = 180; s.plX = 180;
+      s.bmove = 0; s.k = true;
+      pauseUntil = now + 1000;
+    }
+
+    // Ball through the wicket zone -> out, score resets after a longer pause.
+    if (s.blX > 120 && s.blX < 220 && s.blY <= 40) {
+      showWicket = true;
+      s.blY = 650; s.blX = 180;
+      s.score = 0; s.bcs = 0;
+      s.bmoveY = 0; s.bmoveX = 0;
+      s.btmoveY1 = s.btmoveY2 = 0;
+      pauseUntil = now + 2000;
+      statusEl.textContent = 'OUT! Wicket taken — score reset';
+    }
+
+    s.blY += s.bmoveY + s.bmove;
+    s.blX += s.bmoveX;
+    s.btY += s.btmoveY1 + s.btmoveY2;
+    s.btX += s.btmoveX1 + s.btmoveX2;
+    s.plX += s.plmoveX1 + s.plmoveX2;
+    s.plY += s.plmoveY1 + s.plmoveY2;
+    s.bplY += s.btmoveY1 + s.btmoveY2;
+    s.bplX += s.btmoveX1 + s.btmoveX2;
+  }
+
+  function blit(name, x, y) {
+    var i = img[name];
+    if (i && i.complete && i.naturalWidth) ctx.drawImage(i, x, y);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    blit('bg', 0, 0);
+    if (showWicket) blit('wicket', 180, 360);
+    blit('ball', s.blX, s.blY);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 32px ui-monospace, Menlo, Consolas, monospace';
+    ctx.fillText(String(s.score), 15, 50);
+    blit('bplayer', s.bplX, s.bplY);
+    blit('bat', s.btX, s.btY);
+    blit('player', s.plX, s.plY);
+    blit('helmet', 10, 10);
+    blit('bc', 320, 640);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(String(s.bcs), 325, 675);
+  }
+
+  // The Python ran an unthrottled loop; 60Hz keeps the same feel without
+  // spinning a CPU core in a browser tab.
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    if (!last) last = now;
+    acc += now - last;
+    last = now;
+    var interval = 1000 / 60, guard = 0;
+    while (acc >= interval && guard++ < 5) {
+      if (ready && now >= pauseUntil) {
+        if (showWicket && now >= pauseUntil) showWicket = false;
+        step(now);
+      }
+      acc -= interval;
+    }
+    if (ready) draw();
+  }
+
+  window.addEventListener('keydown', down);
+  window.addEventListener('keyup', up);
+  window.addEventListener('blur', function () { keys = {}; });
+  document.getElementById('restart').addEventListener('click', function () { reset(); });
+  Array.prototype.forEach.call(document.querySelectorAll('.pad button'), function (b) {
+    var k = b.dataset.key;
+    var fire = function (type) {
+      var ev = new KeyboardEvent(type, { key: k, bubbles: true });
+      if (type === 'keydown') down(ev); else up(ev);
+    };
+    b.addEventListener('touchstart', function (e) { e.preventDefault(); fire('keydown'); });
+    b.addEventListener('touchend', function (e) { e.preventDefault(); fire('keyup'); });
+    b.addEventListener('mousedown', function () { fire('keydown'); });
+    b.addEventListener('mouseup', function () { fire('keyup'); });
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { cancelAnimationFrame(raf); raf = 0; last = 0; }
+    else if (!raf) raf = requestAnimationFrame(frame);
+  });
+  window.addEventListener('pagehide', function () { cancelAnimationFrame(raf); });
+
+  reset();
+  var names = Object.keys(FILES), left = names.length;
+  names.forEach(function (n) {
+    var i = new Image();
+    i.onload = i.onerror = function () {
+      if (--left === 0) {
+        ready = true;
+        statusEl.textContent = 'Arrows to bowl · WASD to move the bat';
+      }
+    };
+    // Relative URL: works under the /my-portfolio basePath on GitHub Pages.
+    i.src = FILES[n];
+    img[n] = i;
+  });
+  raf = requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
