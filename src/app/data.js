@@ -21,6 +21,7 @@ import { projectImage } from '@/app/lib/publicAsset';
 export const projectsData = [
   {
     id: 12,
+    preview: { kind: 'iframe', url: 'https://quickbite-2ao.pages.dev/', label: 'QuickBite live app' },
     title: "QuickBite",
     subtitle: "Food Delivery Platform",
     description: "Customer, shop, rider, and admin apps with shared orders and live GPS delivery tracking.",
@@ -36,6 +37,7 @@ export const projectsData = [
   },
   {
     id: 1,
+    repo: 'https://github.com/vidu1999/atduinocar',
     title: "Arduino Car",
     subtitle: "Arduino UNO Board Project",
     description: "make arduino car use uno board",
@@ -51,6 +53,8 @@ export const projectsData = [
   },
   {
     id: 2,
+    repo: 'https://github.com/vidu1999/cricketgame',
+    preview: { kind: 'game', path: 'games/cricket/index.html', label: 'Cricket Game' },
     title: "Cricket Game",
     subtitle: "2D Python Game",
     description: "make 2D cricket game using python",
@@ -66,6 +70,7 @@ export const projectsData = [
   },
   {
     id: 3,
+    repo: 'https://github.com/vidu1999/smartcalvulater',
     title: "Advance Calculator",
     subtitle: "Text Capture Calculator",
     description: "make text capture calculater using python",
@@ -81,6 +86,8 @@ export const projectsData = [
   },
   {
     id: 4,
+    repo: 'https://github.com/vidu1999/portfolio',
+    preview: { kind: 'iframe', url: 'https://vidu1999.github.io/portfolio/', label: 'Portfolio site' },
     title: "Portfolio",
     subtitle: "Portfolio Website",
     description: "Make Portfolio using Html Css and JavaScript",
@@ -96,6 +103,7 @@ export const projectsData = [
   },
   {
     id: 5,
+    repo: 'https://github.com/vidu1999/sstudent_attendence_system',
     title: "Student Attendance System",
     subtitle: "Attendance Tracking System",
     description: "make attendence system using python php and Sql",
@@ -111,6 +119,7 @@ export const projectsData = [
   },
   {
     id: 6,
+    repo: 'https://github.com/vidu1999/muliplayergame',
     title: "Multiplayer Game",
     subtitle: "Python Multiplayer Game",
     description: "make multiplayer game using python",
@@ -141,6 +150,7 @@ export const projectsData = [
   },
   {
     id: 8,
+    repo: 'https://github.com/vidu1999/my-portfolio',
     title: "Advance Portfolio",
     subtitle: "3D Interactive Portfolio",
     description: "make portfolio using next.js three.js and talwincss",
@@ -157,6 +167,7 @@ export const projectsData = [
   },
   {
     id: 9,
+    repo: 'https://github.com/vidu1999/dumb_language_identification_system',
     title: "Language Identification System",
     subtitle: "ML-Based Language Detection",
     description: "make Dumb language Identyfication System using python ML",
@@ -199,6 +210,23 @@ export const projectsData = [
     date: "2025-05-04",
     image: projectImage("maintaince.webp"),
     link: "#",
+  },
+  {
+    id: 13,
+    title: "Snake Game",
+    subtitle: "Classic Arcade Game",
+    description: "Classic snake game built in Python with Pygame. Playable in the browser.",
+    tech: "Python / Pygame",
+    badge: "GAME",
+    badgeColor: "from-red-500 to-pink-600",
+    borderColor: "from-pink-600 via-purple-500 to-pink-600",
+    glowColor: "rgba(236,72,153,0.6)",
+    techIcon: "▶",
+    date: "2023-02-11",
+    image: projectImage("snake.webp"),
+    link: "https://github.com/vidu1999/snakegame",
+    repo: "https://github.com/vidu1999/snakegame",
+    preview: { kind: 'game', path: 'games/snake/index.html', label: 'Snake Game' },
   },
 ];
 export const testimonials = [

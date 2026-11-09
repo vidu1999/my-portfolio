@@ -8,6 +8,8 @@ import Image from "next/image";
 import { projectsData } from "@/app/data";
 import { publicAsset } from "@/app/lib/publicAsset";
 import { usePageVisible } from "@/app/lib/usePageVisible";
+import ProjectActions from "./ProjectActions";
+import PreviewModal from "./PreviewModal";
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 const projects = projectsData;
@@ -19,7 +21,7 @@ const stats = [
 ];
 
 // ─── 3D Tilt Card ─────────────────────────────────────────────────────────────
-function TiltCard({ project, offset, onClick }) {
+function TiltCard({ project, offset, onClick, onPreview }) {
   const cardRef = useRef(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
@@ -180,29 +182,7 @@ function TiltCard({ project, offset, onClick }) {
               )}
             </div>
 
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (project.link) {
-                  window.open(project.link, '_blank', 'noopener,noreferrer');
-                }
-              }}
-              className="w-full py-3 rounded-xl font-black text-sm text-white relative overflow-hidden transition-all duration-300"
-              style={{
-                background: isHovered
-                  ? `linear-gradient(135deg, ${project.glowColor.replace("0.6", "0.4")}, ${project.glowColor.replace("0.6", "0.2")})`
-                  : "rgba(255,255,255,0.07)",
-                border: `1px solid ${project.glowColor.replace("0.6", "0.4")}`,
-                boxShadow: isHovered ? `0 0 20px ${project.glowColor.replace("0.6", "0.3")}` : "none",
-              }}
-            >
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                View Project
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-            </button>
+            <ProjectActions project={project} onPreview={onPreview} />
           </div>
         </div>
       </div>
@@ -247,6 +227,8 @@ export default function App() {
   const mouseFrame = useRef(null);
   const pendingMouse = useRef({ x: 0, y: 0 });
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [previewProject, setPreviewProject] = useState(null);
+  const closePreview = useCallback(() => setPreviewProject(null), []);
   const pageVisible = usePageVisible();
 
   useEffect(() => {
@@ -606,7 +588,8 @@ export default function App() {
                     key={project.id} 
                     project={project} 
                     offset={offset} 
-                    onClick={() => setCurrentIndex(index)} 
+                    onClick={() => setCurrentIndex(index)}
+                    onPreview={setPreviewProject}
                   />
                 );
               })}
@@ -773,7 +756,8 @@ export default function App() {
         }}
       />
 
-     
+
+      <PreviewModal project={previewProject} onClose={closePreview} />
     </div>
   );
 }
