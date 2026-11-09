@@ -208,6 +208,17 @@ html[data-vkj-seen="1"] .vkj-root {
 
 /* ---------- terminal ----------------------------------------------------- */
 
+/*
+ * The transcript is typed by CSS, not JavaScript. See Terminal.jsx for why:
+ * a rAF-driven reveal stalls (or skips outright) whenever the portfolio's 3D
+ * models block the main thread. Opacity animations are compositor-driven, so
+ * these keep printing through a blocked main thread and start at first paint
+ * rather than after hydration.
+ *
+ * Every character is present in the DOM from the start at opacity 0, so line
+ * breaks and wrapping are fixed up front and nothing reflows as text arrives.
+ */
+
 .vkj-terminal {
   position: absolute;
   top: 15.5%;
@@ -219,8 +230,32 @@ html[data-vkj-seen="1"] .vkj-root {
   max-width: min(30vw, 340px);
 }
 .vkj-terminal p { margin: 0; white-space: nowrap; }
-.vkj-terminal .vkj-prompt { color: var(--vkj-accent); margin-right: 0.55em; }
 .vkj-terminal .vkj-dim { color: var(--vkj-muted); }
+
+/* The prompt appears when its line starts, then stays. */
+.vkj-terminal .vkj-prompt {
+  color: var(--vkj-accent);
+  margin-right: 0.55em;
+  opacity: 0;
+  animation: vkj-show 1ms steps(1, start) var(--vkj-line-at, 0ms) forwards;
+}
+
+/* One character. Hidden until its scheduled moment, then permanently visible.
+   `forwards` holds the revealed state; steps(1) makes it a hard on/off rather
+   than a fade, which is what a real terminal does. */
+.vkj-ch {
+  opacity: 0;
+  animation: vkj-show 1ms steps(1, start) var(--vkj-at, 0ms) forwards;
+}
+@keyframes vkj-show { to { opacity: 1; } }
+
+/*
+ * Caret. One per line, stepped across in `ch` units — the font is monospace, so
+ * 1ch is exactly one character. `steps()` holds it still between characters and
+ * `transform` keeps the whole thing on the compositor, costing one layer per
+ * line rather than one per character.
+ */
+.vkj-line { position: relative; display: inline-block; }
 
 .vkj-caret {
   display: inline-block;
@@ -229,12 +264,50 @@ html[data-vkj-seen="1"] .vkj-root {
   vertical-align: -0.16em;
   background: var(--vkj-accent);
   box-shadow: 0 0 9px rgba(var(--vkj-accent-rgb), 0.75);
-  animation: vkj-blink 1.05s steps(1, end) infinite;
+}
+
+.vkj-caret[data-track="1"] {
+  position: absolute;
+  left: 0;
+  top: 0.16em;
+  opacity: 0;
+  will-change: transform;
+  animation:
+    vkj-caret-track var(--vkj-type-ms, 1ms) steps(var(--vkj-chars, 1), end) var(--vkj-line-at, 0ms) forwards,
+    vkj-caret-life var(--vkj-type-ms, 1ms) steps(1, end) var(--vkj-line-at, 0ms) forwards;
+}
+/* Advance exactly one character width per step. */
+@keyframes vkj-caret-track {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(var(--vkj-chars, 1) * 1ch)); }
+}
+/* Solid while the line prints, gone the moment it finishes. */
+@keyframes vkj-caret-life { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Idle caret on the final bare prompt: appears when the transcript ends, then
+   blinks the way a shell does while waiting for input. */
+.vkj-caret {
+  display: inline-block;
+  width: 0.62em;
+  height: 1.02em;
+  vertical-align: -0.16em;
+  background: var(--vkj-accent);
+  box-shadow: 0 0 9px rgba(var(--vkj-accent-rgb), 0.75);
+}
+.vkj-caret[data-idle="1"] {
+  opacity: 0;
+  animation:
+    vkj-show 1ms steps(1, end) var(--vkj-line-at, 0ms) forwards,
+    vkj-blink 1.05s steps(1, end) var(--vkj-line-at, 0ms) infinite;
 }
 @keyframes vkj-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
-/* Real shells hold the block cursor solid while characters arrive and only
-   blink once the line is idle. */
-.vkj-caret[data-typing="1"] { animation: none; opacity: 1; }
+
+/* Same override for the JS-detected flag, so the component prop and the media
+   query cannot disagree (e.g. the OS setting changes mid-session). */
+.vkj-terminal[data-reduced="1"] .vkj-prompt,
+.vkj-terminal[data-reduced="1"] .vkj-ch { opacity: 1; animation: none; }
+.vkj-terminal[data-reduced="1"] .vkj-caret[data-track="1"] { display: none; }
+.vkj-terminal[data-reduced="1"] .vkj-caret[data-idle="1"] { opacity: 1; animation: none; }
 
 /* ---------- dot matrix --------------------------------------------------- */
 
@@ -428,6 +501,12 @@ html[data-vkj-seen="1"] .vkj-root {
     transition-duration: 0.001ms !important;
   }
   .vkj-caret { opacity: 1; }
+  /* The typing reveal is delay-driven; the blanket rule above would collapse
+     every delay and leave the transcript hidden. Show it complete instead. */
+  .vkj-terminal .vkj-prompt,
+  .vkj-ch { opacity: 1 !important; animation: none !important; }
+  .vkj-caret[data-track="1"] { display: none; }
+  .vkj-caret[data-idle="1"] { opacity: 1; animation: none !important; }
   .vkj-plate { animation: none; transform: scale(1.02); }
   .vkj-root[data-leaving="true"] { animation: none; opacity: 0; }
 }

@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import OrbitalRings from './OrbitalRings';
+import VkjShield from './VkjShield';
 import Platform from './Platform';
 import SceneEnvironment from './SceneEnvironment';
 import { PALETTE } from '../palette';
@@ -42,16 +43,16 @@ function CameraRig({ reducedMotion, target, fitHalfWidth }) {
   // Pull back on narrow/portrait viewports so the platform and rings stay inside
   // the frame. A fixed distance crops them badly on tablets.
   //
-  // Width alone is not enough: the cube is rotated, so its screen diagonal is
-  // ~1.7x its edge and on a tall viewport that diagonal grew until the rings swept
-  // across the terminal text. Fitting the vertical extent too, with headroom for
-  // the HUD, keeps the centrepiece clear of the corners at every aspect.
+  // Width alone is not enough: the shield is taller than it is wide and the
+  // rings sweep outside it, so on a tall viewport the composition grew until the
+  // rings crossed the terminal text. Fitting the vertical extent too, with
+  // headroom for the HUD, keeps the centrepiece clear of the corners.
   const distance = useMemo(() => {
     const vFov = (camera.fov * Math.PI) / 180;
     const aspect = size.width / Math.max(size.height, 1);
     const tanV = Math.tan(vFov / 2);
     const byWidth = fitHalfWidth / Math.max(tanV * aspect, 0.05);
-    // Rotated-cube diagonal plus ring sweep, as a fraction of viewport height.
+    // Shield height plus ring sweep, as a fraction of viewport height.
     const portrait = aspect < 1.2;
     const verticalExtent = fitHalfWidth * (portrait ? 1.55 : 1.15);
     const byHeight = verticalExtent / Math.max(tanV, 0.05);
@@ -193,8 +194,8 @@ function Reflections() {
 }
 
 function SceneContents({ reducedMotion, quality, onReady, compact }) {
-  // Rings above centre, platform below.
-  const cubeY = compact ? 2.05 : 2.20;
+  // Shield + rings above centre, platform below.
+  const shieldY = compact ? 2.05 : 2.20;
   const platformRadius = compact ? 2.7 : 3.12;
 
   return (
@@ -216,11 +217,15 @@ function SceneContents({ reducedMotion, quality, onReady, compact }) {
 
       <Platform radius={platformRadius} reducedMotion={reducedMotion} />
 
-      {/* The VKJ glass box was removed by request. The orbital rings and the
-          platform stay, so the centrepiece still reads as an energy field rising
-          from the pad rather than an empty hole. */}
-      <group position={[0, cubeY, 0]}>
-        <OrbitalRings reducedMotion={reducedMotion} scale={compact ? 0.82 : 1} />
+      {/* VKJ heraldic shield, orbited by the neon rings. The shield is narrower
+          than the old cube, so the rings still clear its silhouette. */}
+      <group position={[0, shieldY, 0]}>
+        <VkjShield reducedMotion={reducedMotion} size={compact ? 2.40 : 2.90} />
+        <OrbitalRings
+          reducedMotion={reducedMotion}
+          scale={compact ? 0.60 : 0.74}
+          position={[0, -0.42, 0]}
+        />
       </group>
 
       <ReadySignal onReady={onReady} />

@@ -1,146 +1,71 @@
-'use client';
-
-import { useEffect, useRef, useState } from 'react';
-
-const LINES = [
-  'Building something amazing...',
-  'React | Next.js | Three.js',
-  'Python | AI | DevOps',
-  'Turning ideas into reality...',
-];
-
-// Cadence tuned so the transcript lands in ~2.8s of timeline. The loader holds
-// for minDuration (2.6s) + ready hold (0.85s) before the fade begins at ~3.45s,
-// so every line finishes typing and is readable before the overlay leaves.
-// The previous chained-setTimeout version needed ~5.5s and got cut off.
-const START_MS = 200;
-const CHAR_MS = 12;
-const JITTER_MS = 16;
-const LINE_GAP_MS = 130;
+import { LINES, SCHEDULE } from './terminalSchedule';
 
 /**
- * Precomputed reveal schedule: one entry per character, plus the moment each
- * line's prompt appears. Driving from a timeline instead of chaining timers
- * keeps the cadence stable and lets a stalled main thread catch up gradually.
+ * Live bash-style typing, driven entirely by CSS.
+ *
+ * Why there is no JavaScript here
+ * -------------------------------
+ * Three earlier versions advanced the reveal from a rAF loop. All three failed
+ * the same way: the loop can only run when the main thread is free, and on this
+ * site the portfolio's own 3D models block it for seconds during hydration. A
+ * time-based loop then reads a large elapsed value on its very first frame and
+ * paints the finished transcript at once — static text, no typing. A clamped
+ * loop instead fell behind and got snapped to full by the completion flush.
+ *
+ * Both are the same bug: the reveal depended on main-thread frames. This
+ * version does not. Every character is rendered up front, hidden, and revealed
+ * by its own `opacity` animation with a precomputed `animation-delay`. Opacity
+ * is compositor-driven, so the transcript keeps printing even while the main
+ * thread is blocked, and it starts at first paint rather than after hydration.
+ *
+ * The markup is deterministic and identical on server and client, so there is
+ * no hydration mismatch and no flash. No state, no effects, no timers, no
+ * cleanup — nothing to leak when the loader unmounts.
  */
-function buildSchedule() {
-  const chars = [];
-  const promptAt = [];
-  let t = START_MS;
-  LINES.forEach((text, li) => {
-    promptAt.push(t);
-    for (let ci = 1; ci <= text.length; ci += 1) {
-      // Deterministic pseudo-jitter: reads as human typing, stays reproducible.
-      const jitter = ((li * 31 + ci * 17) % 11) / 10;
-      t += CHAR_MS + jitter * JITTER_MS;
-      chars.push({ li, ci, t });
-    }
-    t += LINE_GAP_MS;
-  });
-  return { chars, promptAt, endAt: t };
-}
 
-const SCHEDULE = buildSchedule();
+const ms = (n) => `${Math.round(n)}ms`;
 
-/**
- * Live bash-style typing. Each line's `>` prompt appears, the command types out
- * character by character with a solid block cursor tracking the caret, then
- * pauses as if executed before the next prompt. Ends on a bare prompt with a
- * blinking cursor. Under reduced motion the full transcript renders at once.
- */
-export default function Terminal({ reducedMotion = false, flush = false }) {
-  const full = () => LINES.map((l) => l.length);
-  const [typed, setTyped] = useState(() => (reducedMotion ? full() : [0, 0, 0, 0]));
-  const [visibleLines, setVisibleLines] = useState(() => (reducedMotion ? LINES.length + 1 : 0));
-  const [typing, setTyping] = useState(false);
-  const raf = useRef(0);
-
-  // When loading finishes, immediately reveal whatever hasn't been typed yet.
-  // On a slow device the clamped clock can lag behind the loader; flushing keeps
-  // the transcript from being truncated mid-line, exactly as a shell prints
-  // buffered output when it catches up.
-  useEffect(() => {
-    if (reducedMotion) {
-      setTyped(full());
-      setVisibleLines(LINES.length + 1);
-      setTyping(false);
-      return undefined;
-    }
-
-    if (flush) return undefined;
-    let start = 0;
-    let lastKey = '';
-
-    const frame = (now) => {
-      if (!start) start = now;
-      // Real elapsed time, NOT a per-frame-clamped virtual clock. The clamp made
-      // typing fall behind on any device rendering below ~5fps, so the loader's
-      // completion flush then snapped the text to full — which read as a jump
-      // rather than someone typing. Tracking the wall clock means the transcript
-      // always prints over ~2.8s at any frame rate; a slow device simply shows
-      // fewer intermediate frames instead of lagging and jumping.
-      const elapsed = now - start;
-
-      const counts = [0, 0, 0, 0];
-      for (const c of SCHEDULE.chars) {
-        if (c.t > elapsed) break;
-        counts[c.li] = c.ci;
-      }
-      let lines = 0;
-      for (const at of SCHEDULE.promptAt) {
-        if (at > elapsed) break;
-        lines += 1;
-      }
-      const done = elapsed >= SCHEDULE.endAt;
-      if (done) lines = LINES.length + 1;
-
-      // Active line is the last visible one that isn't complete yet.
-      const active = Math.min(lines, LINES.length) - 1;
-      const isTyping =
-        !done && active >= 0 && counts[active] > 0 && counts[active] < LINES[active].length;
-
-      // Only commit when something actually changed — avoids a render per frame.
-      const key = `${counts.join(',')}|${lines}|${isTyping}`;
-      if (key !== lastKey) {
-        lastKey = key;
-        setTyped(counts);
-        setVisibleLines(lines);
-        setTyping(isTyping);
-      }
-      if (!done) raf.current = requestAnimationFrame(frame);
-    };
-
-    raf.current = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf.current);
-  }, [reducedMotion, flush]);
-
-  // Derived, so the same commit that flips the loader to READY also shows the
-  // complete transcript — no one-frame flash of truncated text.
-  const shownTyped = flush ? LINES.map((l) => l.length) : typed;
-  const shownLines = flush ? LINES.length + 1 : visibleLines;
-  const shownTyping = flush ? false : typing;
-  const activeLine = Math.min(shownLines, LINES.length) - 1;
-
+export default function Terminal({ reducedMotion = false }) {
   return (
-    <div className="vkj-terminal" aria-hidden="true">
-      {LINES.map((text, i) => {
-        if (i >= shownLines) return null;
-        const shown = text.slice(0, shownTyped[i] || 0);
-        const isActive = i === activeLine && shownLines <= LINES.length;
-        return (
-          <p key={i}>
-            <span className="vkj-prompt">&gt;</span>
-            <span className={i === 1 || i === 2 ? 'vkj-dim' : undefined}>{shown}</span>
-            {isActive && <span className="vkj-caret" data-typing={typing ? '1' : '0'} />}
-          </p>
-        );
-      })}
-      {shownLines > LINES.length && (
-        <p>
+    <div
+      className="vkj-terminal"
+      data-reduced={reducedMotion ? '1' : '0'}
+      aria-hidden="true"
+    >
+      {SCHEDULE.lines.map((line, li) => (
+        <p
+          key={li}
+          style={{
+            '--vkj-line-at': ms(line.promptAt),
+            '--vkj-type-ms': ms(line.endAt - line.promptAt),
+            '--vkj-chars': line.chars.length,
+          }}
+        >
           <span className="vkj-prompt">&gt;</span>
-          <span className="vkj-caret" data-typing="0" />
+          <span className="vkj-line">
+            <span className={li === 1 || li === 2 ? 'vkj-dim' : undefined}>
+              {line.chars.map((c, ci) => (
+                <span key={ci} className="vkj-ch" style={{ '--vkj-at': ms(c.t) }}>
+                  {c.ch === ' ' ? '\u00a0' : c.ch}
+                </span>
+              ))}
+            </span>
+            {/* One caret per line, stepped across in ch units. The font is
+                monospace so 1ch is exactly one character. Animating transform
+                keeps this on the compositor and costs one layer per line
+                instead of one per character. */}
+            <span className="vkj-caret" data-track="1" />
+          </span>
         </p>
-      )}
+      ))}
+
+      {/* Trailing idle prompt, as a shell shows after the last command. */}
+      <p className="vkj-idle" style={{ '--vkj-line-at': ms(SCHEDULE.endAt) }}>
+        <span className="vkj-prompt">&gt;</span>
+        <span className="vkj-caret" data-idle="1" />
+      </p>
     </div>
   );
 }
+
+export { LINES };
