@@ -8,6 +8,7 @@ import { useLoadingProgress } from './useLoadingProgress';
 import { paletteVars } from './palette';
 import Hud from './Hud';
 import Terminal from './Terminal';
+import { TERMINAL_DURATION_MS } from './terminalSchedule';
 import './loading.css';
 
 /**
@@ -129,8 +130,15 @@ export default function LoadingScreen() {
     return () => { cancelAnimationFrame(raf); clearTimeout(timer); };
   }, [active, webgl]);
 
+  // The transcript needs TERMINAL_DURATION_MS (~2.79s) to finish printing. The
+  // old 2600ms floor let `complete` fire ~190ms early and cut off the last line,
+  // so the floor is now derived from the schedule plus a small read beat.
+  const minDuration = reducedMotion
+    ? 900
+    : Math.max(2600, Math.ceil(TERMINAL_DURATION_MS) + 260);
+
   const { percent, complete, markSceneReady } = useLoadingProgress({
-    minDuration: reducedMotion ? 900 : 2600,
+    minDuration,
     assets,
     enabled: active,
   });
@@ -212,7 +220,7 @@ export default function LoadingScreen() {
       <div className="vkj-atmos" />
       <div className="vkj-vignette" />
       <Hud />
-      <Terminal reducedMotion={reducedMotion} flush={shownComplete} />
+      <Terminal reducedMotion={reducedMotion} />
 
       <div className="vkj-load">
         <h2 className="vkj-title">
