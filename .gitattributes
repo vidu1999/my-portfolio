@@ -1,1 +1,6 @@
 *.glb filter=lfs diff=lfs merge=lfs -text
+
+# The homepage character must always be a real, loadable binary. The other GLBs
+# in this repo are unresolved LFS pointers, so routing this one through LFS risks
+# shipping a 133-byte text file instead of the model. It is only 2.86MB.
+public/models/vkjanime.glb -filter -diff -merge

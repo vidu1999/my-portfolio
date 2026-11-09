@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Me } from "./models/Me";
+import { VkjAnime } from "./models/VkjAnime";
 import { Mini } from "./models/Mini";
 import RenderModels from "/src/app/compenents/RenderModels";
 import Link from 'next/link'
@@ -785,7 +785,7 @@ export default function PortfolioDeskReactTailwind() {
                 <ElectricPanelBorder active={activePanel === "profile"} />
                 <div className="avatar-box relative mb-3 h-[180px] overflow-hidden rounded-[22px] border border-white/25 bg-[radial-gradient(160px_120px_at_50%_15%,rgba(255,255,255,.5),transparent_45%),linear-gradient(180deg,rgba(150,195,255,.45),rgba(58,92,138,.35)_35%,rgba(24,39,73,.8)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,.4),inset_0_-16px_24px_rgba(0,0,0,.28)]">
                   <div className="avatar absolute inset-0 [transform:translateZ(18px)]">
-                    <RenderModels><Me /></RenderModels>
+                    <RenderModels><VkjAnime /></RenderModels>
                   </div>
                 </div>
 
