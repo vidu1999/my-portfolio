@@ -61,8 +61,18 @@ function RenderModels({ children, className }) {
       <ErrorBoundary onError={() => endModelWork(modelId, false)}>
         <Suspense fallback={null}>
           {children}
-          <Environment preset="city" />
           <ModelResolved id={modelId} />
+        </Suspense>
+      </ErrorBoundary>
+      {/* The HDR preset is fetched from a third-party CDN, so it can fail or
+          hang independently of the model. It MUST NOT share the boundary above:
+          when that fetch rejected, the shared ErrorBoundary fell back to null
+          and unmounted the model with it — the canvas kept rendering empty
+          frames, so an animated character silently disappeared. Isolating it
+          means a CDN failure costs reflections, not the model. */}
+      <ErrorBoundary fallback={null}>
+        <Suspense fallback={null}>
+          <Environment preset="city" />
         </Suspense>
       </ErrorBoundary>
     </Canvas>
