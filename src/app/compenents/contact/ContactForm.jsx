@@ -11,7 +11,7 @@ import { AlertTriangle, CheckCircle, Loader2, X } from "lucide-react";
 // Until the URL is set, the form shows a setup notice and submissions fail
 // safely with a clear message.
 const CONTACT_ENDPOINT =
-  "https://script.google.com/macros/s/REPLACE_WITH_YOUR_DEPLOYMENT_ID/exec";
+  "https://script.google.com/macros/s/AKfycbxvutfkU4ZoOkaB9AmZ5cibrHOmXY1p7DDZqg1hekZ5ALqRZGvh-yr_cEzwIfGKT9hdKw/exec";
 
 // Public reCAPTCHA v2 site key ("I'm not a robot" checkbox). The matching
 // secret key belongs only inside the Apps Script, never in this code.
