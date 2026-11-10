@@ -13,9 +13,18 @@ import { AlertTriangle, CheckCircle, Loader2, X } from "lucide-react";
 const CONTACT_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbxvutfkU4ZoOkaB9AmZ5cibrHOmXY1p7DDZqg1hekZ5ALqRZGvh-yr_cEzwIfGKT9hdKw/exec";
 
-// Public reCAPTCHA v2 site key ("I'm not a robot" checkbox). The matching
-// secret key belongs only inside the Apps Script, never in this code.
+// Public reCAPTCHA v2 site key. The matching secret key belongs only inside
+// the Apps Script, never in this code.
 const RECAPTCHA_SITE_KEY = "6LfPoRkuAAAAAPFIinCD7IKyV0BqyODUI8wKxqyo";
+
+// reCAPTCHA widget size for the key above. The current key is registered as
+// a v2 "Invisible" key, so it MUST render with size "invisible": verification
+// runs automatically when the visitor submits (Google shows a challenge only
+// to suspicious traffic) and the "protected by reCAPTCHA" badge shows inline.
+// If the key is ever replaced with a v2 "I'm not a robot" Checkbox key,
+// change this to "normal" to get the visible checkbox + pre-submit gate.
+const RECAPTCHA_SIZE = "invisible";
+const IS_INVISIBLE = RECAPTCHA_SIZE !== "normal";
 
 const ENDPOINT_CONFIGURED = !CONTACT_ENDPOINT.includes(
   "AKfycby2cB5tqFi2tmcIf37ZcI7zU0FExQwxnaTUpC8I2qGs"
@@ -25,7 +34,10 @@ function ContactForm() {
   const formRef = useRef(null);
   const captchaRef = useRef(null);
   const widgetIdRef = useRef(null);
-  const [verified, setVerified] = useState(false);
+  const tokenResolveRef = useRef(null);
+  const tokenRejectRef = useRef(null);
+  const [verified, setVerified] = useState(false); // checkbox mode: ticked
+  const [widgetReady, setWidgetReady] = useState(false); // widget rendered
   const [widgetError, setWidgetError] = useState(false);
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState(null); // { type: "success" | "error", text, detail }
@@ -34,6 +46,30 @@ function ContactForm() {
     let cancelled = false;
     let polls = 0;
     let readyQueued = false;
+
+    const onToken = (token) => {
+      if (IS_INVISIBLE) {
+        if (tokenResolveRef.current) {
+          tokenResolveRef.current(token);
+          tokenResolveRef.current = null;
+          tokenRejectRef.current = null;
+        }
+      } else {
+        setVerified(true);
+        setNotice(null);
+      }
+    };
+    const onExpired = () => {
+      if (IS_INVISIBLE) {
+        if (tokenRejectRef.current) {
+          tokenRejectRef.current(new Error("expired"));
+          tokenResolveRef.current = null;
+          tokenRejectRef.current = null;
+        }
+      } else {
+        setVerified(false);
+      }
+    };
 
     const renderWidget = () => {
       if (cancelled || widgetIdRef.current !== null || !captchaRef.current) return true;
@@ -44,14 +80,14 @@ function ContactForm() {
       try {
         widgetIdRef.current = api.render(captchaRef.current, {
           sitekey: RECAPTCHA_SITE_KEY,
+          size: RECAPTCHA_SIZE,
+          badge: IS_INVISIBLE ? "inline" : undefined,
           theme: "dark",
-          callback: () => {
-            setVerified(true);
-            setNotice(null);
-          },
-          "expired-callback": () => setVerified(false),
-          "error-callback": () => setVerified(false),
+          callback: onToken,
+          "expired-callback": onExpired,
+          "error-callback": onExpired,
         });
+        setWidgetReady(true);
         setWidgetError(false);
       } catch {
         // render() threw (bad key type/domain shows Google's own error box;
@@ -79,7 +115,10 @@ function ContactForm() {
     };
 
     const onError = () => {
-      if (!cancelled) setWidgetError(true);
+      // Only warn when nothing rendered — a script error must never paint a
+      // warning next to an already-working widget (e.g. grecaptcha provided
+      // by an earlier/other copy of the script).
+      if (!cancelled && widgetIdRef.current === null) setWidgetError(true);
     };
 
     const id = "vkj-recaptcha-api";
@@ -110,26 +149,47 @@ function ContactForm() {
     };
   }, []);
 
+  // Returns a reCAPTCHA token: instantly for a completed checkbox, or after
+  // Google's (usually invisible) challenge for the invisible widget.
+  const requestToken = () =>
+    new Promise((resolve, reject) => {
+      const api = window.grecaptcha;
+      if (!api || widgetIdRef.current === null) {
+        reject(new Error("reCAPTCHA not ready"));
+        return;
+      }
+      if (!IS_INVISIBLE) {
+        const token = api.getResponse(widgetIdRef.current);
+        if (token) resolve(token);
+        else reject(new Error("not verified"));
+        return;
+      }
+      tokenResolveRef.current = resolve;
+      tokenRejectRef.current = reject;
+      try {
+        api.execute(widgetIdRef.current);
+      } catch (error) {
+        tokenResolveRef.current = null;
+        tokenRejectRef.current = null;
+        reject(error);
+      }
+    });
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (sending) return;
 
-    if (!verified) {
+    if (!IS_INVISIBLE && !verified) {
       setNotice({
         type: "error",
         text: "Please complete the reCAPTCHA verification.",
       });
       return;
     }
-
-    const token = window.grecaptcha
-      ? window.grecaptcha.getResponse(widgetIdRef.current)
-      : "";
-    if (!token) {
-      setVerified(false);
+    if (IS_INVISIBLE && widgetIdRef.current === null) {
       setNotice({
         type: "error",
-        text: "reCAPTCHA expired — please verify again.",
+        text: "reCAPTCHA is still loading — please try again in a moment.",
       });
       return;
     }
@@ -140,6 +200,20 @@ function ContactForm() {
 
     setSending(true);
     setNotice(null);
+
+    let token = "";
+    try {
+      token = await requestToken();
+    } catch {
+      setSending(false);
+      if (!IS_INVISIBLE) setVerified(false);
+      setNotice({
+        type: "error",
+        text: "reCAPTCHA verification failed — please try again.",
+      });
+      return;
+    }
+
     try {
       const res = await fetch(CONTACT_ENDPOINT, {
         method: "POST",
@@ -233,12 +307,14 @@ function ContactForm() {
         className="w-full resize-none rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(10,14,33,.96),rgba(16,22,45,.76))] px-5 py-4 text-white outline-none placeholder:text-slate-400 focus:border-violet-400/60 focus:shadow-[0_0_0_1px_rgba(167,139,250,.2),0_0_26px_rgba(99,102,241,.18)]"
       />
 
-      {/* reCAPTCHA verification */}
+      {/* reCAPTCHA verification (invisible key → inline badge + auto check) */}
       <div className="flex flex-col items-start gap-3">
         <div ref={captchaRef} className="min-h-[78px]" />
         {widgetError ? (
           <p className="text-sm text-amber-300/90">
-            reCAPTCHA could not load — check your connection and refresh the page.
+            reCAPTCHA could not load — it may be blocked by your network or an
+            ad blocker, or the site key may be invalid. Please refresh the page
+            or try another network.
           </p>
         ) : null}
         {!ENDPOINT_CONFIGURED ? (
@@ -293,7 +369,7 @@ function ContactForm() {
       <div className="flex justify-center">
         <button
           type="submit"
-          disabled={!verified || sending}
+          disabled={sending || (IS_INVISIBLE ? !widgetReady : !verified)}
           className="inline-flex items-center justify-center rounded-2xl border border-violet-300/20 bg-[linear-gradient(135deg,#5464ff_0%,#7d6dff_35%,#de6bc6_100%)] px-8 py-4 text-base font-semibold text-white shadow-[0_12px_34px_rgba(108,92,255,.45),0_0_22px_rgba(113,130,255,.38)] transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
         >
           {sending ? (
