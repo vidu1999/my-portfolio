@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useId, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { VkjAnime } from "./models/VkjAnime";
 import { Mini } from "./models/Mini";
@@ -97,6 +97,17 @@ const socialLinks = [
     title: "Call",
   },
 ];
+
+const latestWorkItems = [...projectsData]
+  .sort((a, b) => new Date(b.date) - new Date(a.date))
+  .slice(0, 2)
+  .map((project, index) => ({
+    target: project.id.toString(),
+    title: project.title,
+    meta: project.subtitle || project.tech,
+    thumb: index % 2 === 0 ? "vr" : "shop",
+    image: project.image,
+  }));
 
 function cls(...parts) {
   return parts.filter(Boolean).join(" ");
@@ -228,30 +239,113 @@ function ElectricPanelBorder({ active }) {
   );
 }
 
-export default function PortfolioDeskReactTailwind() {
+const ProfilePanel = React.memo(function ProfilePanel({ active, onFront, showToast }) {
+  const layer = active ? "z-[80] is-active" : "z-10";
+  return (
+  <aside
+    onClick={() => onFront("profile")}
+    className={cls(
+      "panel absolute left-[18px] top-[52px] min-h-[460px] w-[220px] overflow-hidden rounded-[28px] border border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08)_12%,rgba(255,255,255,.05)_18%,rgba(8,14,28,.42)_100%),linear-gradient(145deg,rgba(118,230,255,.10),rgba(95,135,255,.06))] p-4 shadow-[0_0_0_1px_rgba(255,255,255,.08)_inset,0_12px_30px_rgba(0,0,0,.24),0_0_40px_rgba(118,230,255,.08),0_28px_50px_rgba(5,12,28,.45)] [backdrop-filter:blur(18px)] [-webkit-backdrop-filter:blur(18px)] [transform:translateZ(60px)_rotateY(14deg)_rotateX(2deg)] cursor-pointer max-[1080px]:relative max-[1080px]:inset-auto max-[1080px]:col-span-4 max-[1080px]:min-h-0 max-[1080px]:w-auto max-[1080px]:[transform:none!important] max-[760px]:col-span-1",
+      layer
+    )}
+  >
+    <ElectricPanelBorder active={active} />
+    <div className="avatar-box relative mb-3 h-[180px] overflow-hidden rounded-[22px] border border-white/25 bg-[radial-gradient(160px_120px_at_50%_15%,rgba(255,255,255,.5),transparent_45%),linear-gradient(180deg,rgba(150,195,255,.45),rgba(58,92,138,.35)_35%,rgba(24,39,73,.8)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,.4),inset_0_-16px_24px_rgba(0,0,0,.28)]">
+      <div className="avatar absolute inset-0 [transform:translateZ(18px)]">
+        <RenderModels><VkjAnime /></RenderModels>
+      </div>
+    </div>
+
+    <h2 className="mb-0.5 text-[26px] font-extrabold leading-none tracking-[-.03em] max-[760px]:text-2xl">Vidura Kavinda</h2>
+    <p className="mb-3.5 text-[13px] font-bold text-[#9fb3d6]">FULLSTACK DEVELOPER &amp; DEVOPS</p>
+
+    <div className="my-3 grid grid-cols-3 gap-2">
+      {[
+        ["6+", "Years"],
+        ["15+", "Projects"],
+        ["24/7", "Creative"],
+      ].map(([num, label]) => (
+        <div key={label} className="rounded-2xl border border-white/10 bg-white/[.06] px-1.5 py-2.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,.08)]">
+          <strong className="mb-1 block text-[18px] leading-none">{num}</strong>
+          <span className="text-[11px] font-bold text-[#9fb3d6]">{label}</span>
+        </div>
+      ))}
+    </div>
+
+    <div className="grid gap-2.5">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          showToast(
+            "About Me: I design sleek product interfaces, 3D web experiences, and polished interactive systems."
+          );
+        }}
+        className="cursor-pointer rounded-full bg-[linear-gradient(180deg,#9beeff,#6ccfff)] px-4 py-2.5 text-sm font-extrabold text-[#173050] shadow-[0_12px_20px_rgba(118,230,255,.18)] transition duration-150 hover:-translate-y-0.5"
+      >
+        <Link href="/about">About Me</Link>
+      </button>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          showToast("Contact panel ready on the right. Yes, it glows on purpose.");
+
+        }}
+        className="cursor-pointer rounded-full border border-white/15 bg-white/[.08] px-3.5 py-[9px] text-xs font-bold text-[#eff7ff] transition duration-150 hover:-translate-y-0.5"
+      >
+        <Link href="/contact">Contact Me </Link>
+      </button>
+    </div>
+
+    <div className="mt-3.5 flex items-center justify-between gap-2">
+      {socialLinks.map(({ label, href, title, external }) => (
+        <a
+          key={title}
+          href={href}
+          title={title}
+          aria-label={title}
+          target={external ? "_blank" : undefined}
+          rel={external ? "noreferrer noopener" : undefined}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+          className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-xl border border-white/15 bg-white/[.08] text-[13px] font-extrabold text-[#eaf7ff] transition duration-150 hover:-translate-y-0.5 hover:bg-[rgba(118,230,255,.14)] hover:shadow-[0_0_20px_rgba(118,230,255,.12)]"
+        >
+          {title === "Call" ? "☎" : label}
+        </a>
+      ))}
+    </div>
+
+    <div className="mt-3.5 hidden gap-2">
+      {[
+        ["f", "Facebook placeholder"],
+        ["x", "X / Twitter placeholder"],
+        ["in", "LinkedIn placeholder"],
+        ["📞", "Call placeholder"],
+      ].map(([label, msg]) => (
+        <button
+          key={label}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            showToast(msg);
+          }}
+          className="grid h-[34px] w-[34px] place-items-center rounded-xl border border-white/15 bg-white/[.08] text-[13px] font-extrabold text-[#eaf7ff] transition duration-150 hover:-translate-y-0.5 hover:bg-[rgba(118,230,255,.14)] hover:shadow-[0_0_20px_rgba(118,230,255,.12)]"
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  </aside>
+  );
+});
+
+const ProjectCarousel = React.memo(function ProjectCarousel({ activeKey, onSelectCard, onPreview, active, onFront }) {
   const router = useRouter();
-  const pageVisible = usePageVisible();
-  const sceneRef = useRef(null);
-  const worldRef = useRef(null);
-  const frameRef = useRef(null);
-  const toastTimerRef = useRef(null);
-  const tiltRef = useRef({ targetX: 0, targetY: 0, currentX: 0, currentY: 0 });
-
+  const layer = active ? "z-[80] is-active" : "z-10";
   const [filter, setFilter] = useState("all");
-  const [activeKey, setActiveKey] = useState("dashboard");
-  const [toast, setToast] = useState({ show: false, text: "Portfolio system online ✨" });
-  const [activePanel, setActivePanel] = useState("none");
   const [currentPage, setCurrentPage] = useState(0);
-  const [activeTestimonialIdx, setActiveTestimonialIdx] = useState(0);
-  const [previewProject, setPreviewProject] = useState(null);
-
-  useEffect(() => {
-    if (!pageVisible) return;
-    const testimonialTimer = setInterval(() => {
-      setActiveTestimonialIdx((prev) => (prev + 1) % testimonials.length);
-    }, 6000);
-    return () => clearInterval(testimonialTimer);
-  }, [pageVisible]);
 
   const visibleProjects = useMemo(() => {
     return projectItems.filter((item) => filter === "all" || item.cats.includes(filter));
@@ -267,33 +361,6 @@ export default function PortfolioDeskReactTailwind() {
   const activeProject = useMemo(() => {
     return projectItems.find((item) => item.key === activeKey) || visibleProjects[0] || projectItems[0];
   }, [activeKey, visibleProjects]);
-
-  const latestWorkItems = useMemo(() => {
-    return [...projectsData]
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 2)
-      .map((project, index) => ({
-        target: project.id.toString(),
-        title: project.title,
-        meta: project.subtitle || project.tech,
-        thumb: index % 2 === 0 ? "vr" : "shop",
-        image: project.image,
-      }));
-  }, []);
-
-  const workItems = latestWorkItems;
-
-  const showToast = (message) => {
-    setToast({ show: true, text: message });
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => {
-      setToast((prev) => ({ ...prev, show: false }));
-    }, 2200);
-  };
-
-  const selectCard = (key) => {
-    setActiveKey(key);
-  };
 
   const goNextPage = () => {
     if (currentPage < totalPages - 1) {
@@ -314,9 +381,403 @@ export default function PortfolioDeskReactTailwind() {
       (item) => nextFilter === "all" || item.cats.includes(nextFilter)
     );
     if (nextVisible.length) {
-      setActiveKey(nextVisible[0].key);
+      onSelectCard(nextVisible[0].key);
     }
   };
+
+  // Warm the next page's card images so flipping pages can't hitch on
+  // decode — they are already in the browser cache when the cards mount.
+  useEffect(() => {
+    const startIdx = (currentPage + 1) * 3;
+    visibleProjects.slice(startIdx, startIdx + 3).forEach((item) => {
+      if (item.image) {
+        const img = new window.Image();
+        img.src = item.image;
+      }
+    });
+  }, [currentPage, visibleProjects]);
+  return (
+  <main
+    onClick={() => onFront("portfolio")}
+    className={cls(
+      "panel absolute left-1/2 top-7 min-h-[352px] w-[min(560px,50%)] -translate-x-1/2 overflow-hidden rounded-[28px] border border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08)_12%,rgba(255,255,255,.05)_18%,rgba(8,14,28,.42)_100%),linear-gradient(145deg,rgba(118,230,255,.10),rgba(95,135,255,.06))] p-4 shadow-[0_0_0_1px_rgba(255,255,255,.08)_inset,0_12px_30px_rgba(0,0,0,.24),0_0_40px_rgba(118,230,255,.08),0_28px_50px_rgba(5,12,28,.45)] [backdrop-filter:blur(18px)] [-webkit-backdrop-filter:blur(18px)] [transform:translateX(-50%)_translateZ(76px)_rotateX(2deg)] cursor-pointer max-[1080px]:relative max-[1080px]:inset-auto max-[1080px]:col-span-8 max-[1080px]:min-h-0 max-[1080px]:w-auto max-[1080px]:translate-x-0 max-[1080px]:[transform:none!important] max-[760px]:col-span-1",
+      layer
+    )}
+  >
+    <ElectricPanelBorder active={active} />
+    <div className="mb-2.5 flex items-center justify-between gap-3 max-[760px]:flex-col max-[760px]:items-start">
+      <div className="flex items-center gap-1.5 text-sm font-extrabold text-[#eff8ff]">
+        <span className="grid grid-cols-2 gap-1">
+          <i className="block h-2 w-2 rounded-[2px] bg-[#ff7b8a]" />
+          <i className="block h-2 w-2 rounded-[2px] bg-[#ffd66b]" />
+          <i className="block h-2 w-2 rounded-[2px] bg-[#70f0d1]" />
+          <i className="block h-2 w-2 rounded-[2px] bg-[#73afff]" />
+        </span>
+        <span>My Portfolio</span>
+      </div>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (activeProject && activeProject.id) {
+            router.push(`/projects?target=${activeProject.id}`);
+          } else {
+            router.push('/projects');
+          }
+        }}
+        className="cursor-pointer rounded-full border border-white/15 bg-white/[.08] px-3.5 py-[9px] text-xs font-bold text-[#eff7ff] transition duration-150 hover:-translate-y-0.5"
+      >
+        View More
+      </button>
+    </div>
+
+    <div className="mb-3.5 flex flex-wrap gap-2">
+      {tabs.map((tab) => (
+        <button
+          key={tab.key}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            applyFilter(tab.key);
+          }}
+          className={cls(
+            "cursor-pointer rounded-full border px-3 py-[7px] text-[11px] font-bold tracking-[.01em] transition duration-150 hover:-translate-y-0.5",
+            filter === tab.key
+              ? "border-transparent bg-[linear-gradient(180deg,rgba(255,255,255,.9),rgba(227,241,255,.85))] text-[#223052] shadow-[0_8px_18px_rgba(255,255,255,.16)]"
+              : "border-white/15 bg-white/[.07] text-[#d4e3ff]"
+          )}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+
+    <div className="grid grid-cols-3 gap-3 max-[760px]:grid-cols-1">
+      {paginatedProjects.map((project) => {
+        return (
+          <article
+            key={project.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectCard(project.key);
+            }}
+            className={cls(
+              "min-w-0 cursor-pointer flex-col gap-[9px] rounded-[20px] border bg-white/[.14] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,.12)] transition duration-200",
+              "flex",
+              activeKey === project.key
+                ? "border-[rgba(118,230,255,.55)] bg-[linear-gradient(180deg,rgba(118,230,255,.11),rgba(255,255,255,.05))] shadow-[0_0_0_1px_rgba(118,230,255,.18)_inset,0_14px_30px_rgba(0,0,0,.28),0_0_24px_rgba(118,230,255,.18)]"
+                : "border-white/15 hover:-translate-y-[5px] hover:border-[rgba(118,230,255,.36)] hover:shadow-[0_16px_24px_rgba(0,0,0,.25),0_0_18px_rgba(118,230,255,.12)]"
+            )}
+          >
+            {project.image ? (
+              <div className="preview h-28 rounded-2xl relative overflow-hidden border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,.24)]">
+                <Image
+                  src={project.image}
+                  alt={project.title}
+                  width={640}
+                  height={360}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <Preview type={project.type} />
+            )}
+            <div className="text-xs font-extrabold leading-[1.3] text-[#eef7ff]">{project.title}</div>
+            <ProjectActions
+              project={project}
+              onPreview={onPreview}
+              className="mt-0.5"
+            />
+          </article>
+        );
+      })}
+    </div>
+
+    {totalPages > 1 && (
+      <div className="mt-3.5 flex items-center justify-center gap-3">
+        <button
+          onClick={goPrevPage}
+          disabled={currentPage === 0}
+          className="px-4 py-2 rounded-lg bg-white/[.06] border border-white/15 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/[.12] transition"
+        >
+          ← Previous
+        </button>
+        <div className="text-sm text-white/60">
+          Page {currentPage + 1} of {totalPages}
+        </div>
+        <button
+          onClick={goNextPage}
+          disabled={currentPage === totalPages - 1}
+          className="px-4 py-2 rounded-lg bg-white/[.06] border border-white/15 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/[.12] transition"
+        >
+          Next →
+        </button>
+      </div>
+    )}
+
+    <div className="mt-3.5 flex items-center justify-between gap-3 rounded-[18px] border border-white/20 bg-white/[.14] px-3.5 py-3 max-[760px]:flex-col max-[760px]:items-start">
+      <div className="min-w-0">
+        <div className="mb-[3px] text-[11px] font-extrabold uppercase tracking-[.12em] text-[#76e6ff]">Selected Project</div>
+        <div className="truncate text-sm font-extrabold">{activeProject.title}</div>
+        <div className="truncate text-xs text-[#9fb3d6]">{activeProject.note}</div>
+      </div>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (activeProject && activeProject.link) {
+            window.open(activeProject.link, '_blank', 'noopener,noreferrer');
+          }
+        }}
+        className="cursor-pointer rounded-full bg-[linear-gradient(180deg,#9beeff,#6ccfff)] px-4 py-2.5 text-sm font-extrabold text-[#173050] shadow-[0_12px_20px_rgba(118,230,255,.18)] transition duration-150 hover:-translate-y-0.5"
+        aria-label="Open project repository in a new tab"
+      >
+        Open
+      </button>
+    </div>
+  </main>
+  );
+});
+
+const SkillsPanel = React.memo(function SkillsPanel({ active, onFront }) {
+  const layer = active ? "z-[80] is-active" : "z-10";
+  return (
+  <section
+    onClick={() => onFront("skills")}
+    className={cls(
+      "panel absolute right-[22px] top-14 min-h-[154px] w-[210px] overflow-hidden rounded-[28px] border border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08)_12%,rgba(255,255,255,.05)_18%,rgba(8,14,28,.42)_100%),linear-gradient(145deg,rgba(118,230,255,.10),rgba(95,135,255,.06))] p-4 shadow-[0_0_0_1px_rgba(255,255,255,.08)_inset,0_12px_30px_rgba(0,0,0,.24),0_0_40px_rgba(118,230,255,.08),0_28px_50px_rgba(5,12,28,.45)] [backdrop-filter:blur(18px)] [-webkit-backdrop-filter:blur(18px)] [transform:translateZ(58px)_rotateY(-15deg)_rotateX(2deg)] cursor-pointer max-[1080px]:relative max-[1080px]:inset-auto max-[1080px]:col-span-4 max-[1080px]:min-h-0 max-[1080px]:w-auto max-[1080px]:[transform:none!important] max-[760px]:col-span-1",
+      layer
+    )}
+  >
+    <ElectricPanelBorder active={active} />
+    <h3 className="mb-3 flex items-center gap-2 text-lg font-extrabold tracking-[.01em]">
+      <span className="h-2.5 w-2.5 rounded-full bg-[#76e6ff] shadow-[0_0_14px_rgba(118,230,255,.95)]" />
+      Skills
+    </h3>
+    <div className="mt-2.5 grid gap-2.5">
+      {[
+        ["UI/UX Design", "93%", "93%"],
+        ["3D Modeling", "88%", "88%"],
+        ["Animation", "81%", "81%"],
+        ["Web Development", "90%", "90%"],
+      ].map(([name, score, width]) => (
+        <div key={name} className="grid grid-cols-[1fr_auto] items-center gap-x-2.5 gap-y-2">
+          <div className="text-xs font-bold text-[#eaf5ff]">{name}</div>
+          <div className="text-[11px] font-extrabold text-[#dbeeff]">{score}</div>
+          <div className="col-span-full h-2.5 overflow-hidden rounded-full border border-white/10 bg-white/[.08]">
+            <span
+              className="block h-full rounded-full bg-[linear-gradient(90deg,#7de9ff,#6cb1ff)] shadow-[0_0_12px_rgba(118,230,255,.4)] [animation:meterIn_1s_ease_both] origin-left"
+              style={{ width }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+  );
+});
+
+const TestimonialsPanel = React.memo(function TestimonialsPanel({ active, onFront }) {
+  const layer = active ? "z-[80] is-active" : "z-10";
+  const pageVisible = usePageVisible();
+  const [activeTestimonialIdx, setActiveTestimonialIdx] = useState(0);
+
+  useEffect(() => {
+    if (!pageVisible) return undefined;
+    const testimonialTimer = setInterval(() => {
+      setActiveTestimonialIdx((prev) => (prev + 1) % testimonials.length);
+    }, 6000);
+    return () => clearInterval(testimonialTimer);
+  }, [pageVisible]);
+  return (
+  <section
+    onClick={() => onFront("testimonials")}
+    className={cls(
+      "panel absolute right-1 top-[242px] min-h-[220px] w-[250px] overflow-hidden rounded-[28px] border border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08)_12%,rgba(255,255,255,.05)_18%,rgba(8,14,28,.42)_100%),linear-gradient(145deg,rgba(118,230,255,.10),rgba(95,135,255,.06))] p-4 shadow-[0_0_0_1px_rgba(255,255,255,.08)_inset,0_12px_30px_rgba(0,0,0,.24),0_0_40px_rgba(118,230,255,.08),0_28px_50px_rgba(5,12,28,.45)] [backdrop-filter:blur(18px)] [-webkit-backdrop-filter:blur(18px)] [transform:translateZ(62px)_rotateY(-12deg)_rotateX(1deg)] cursor-pointer max-[1080px]:relative max-[1080px]:inset-auto max-[1080px]:col-span-4 max-[1080px]:min-h-0 max-[1080px]:w-auto max-[1080px]:[transform:none!important] max-[760px]:col-span-1",
+      layer
+    )}
+  >
+    <ElectricPanelBorder active={active} />
+    <h3 className="mb-3 flex items-center gap-2 text-lg font-extrabold tracking-[.01em]">
+      <span className="h-2.5 w-2.5 rounded-full bg-[#76e6ff] shadow-[0_0_14px_rgba(118,230,255,.95)]" />
+      Testimonials
+    </h3>
+    <div className="relative h-[90px] w-full">
+      {testimonials.map((testimonial, idx) => (
+        <div
+          key={idx}
+          className={cls(
+            "absolute inset-0 transition-opacity duration-500",
+            activeTestimonialIdx === idx ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+          )}
+        >
+          <div className="my-2 rounded-2xl border border-white/20 bg-white/[.14] px-3.5 py-3 text-[10px] leading-[1.5] text-[#edf8ff]">
+            &quot;{testimonial.text}&quot;
+          </div>
+          <div className="flex justify-end text-[9px] font-bold text-[#9fb3d6]">
+            {testimonial.name}
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+  );
+});
+
+const LatestWorksPanel = React.memo(function LatestWorksPanel({ active, onFront, onSelectCard, showToast }) {
+  const layer = active ? "z-[80] is-active" : "z-10";
+  return (
+  <section
+    onClick={() => onFront("works")}
+    className={cls(
+      "panel absolute bottom-[86px] left-[286px] min-h-[158px] w-[394px] overflow-hidden rounded-[28px] border border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08)_12%,rgba(255,255,255,.05)_18%,rgba(8,14,28,.42)_100%),linear-gradient(145deg,rgba(118,230,255,.10),rgba(95,135,255,.06))] p-4 shadow-[0_0_0_1px_rgba(255,255,255,.08)_inset,0_12px_30px_rgba(0,0,0,.24),0_0_40px_rgba(118,230,255,.08),0_28px_50px_rgba(5,12,28,.45)] [backdrop-filter:blur(18px)] [-webkit-backdrop-filter:blur(18px)] [transform:translateZ(55px)_rotateX(5deg)_rotateY(3deg)] cursor-pointer max-[1080px]:relative max-[1080px]:inset-auto max-[1080px]:col-span-8 max-[1080px]:min-h-0 max-[1080px]:w-auto max-[1080px]:[transform:none!important] max-[760px]:col-span-1",
+      layer
+    )}
+  >
+    <ElectricPanelBorder active={active} />
+    <h3 className="mb-3 flex items-center gap-2 text-lg font-extrabold tracking-[.01em]">
+      <span className="h-2.5 w-2.5 rounded-full bg-[#76e6ff] shadow-[0_0_14px_rgba(118,230,255,.95)]" />
+      Latest Works
+    </h3>
+    <div className="mt-2.5 grid grid-cols-2 gap-3 max-[780px]:grid-cols-1">
+      {latestWorkItems.map((work) => (
+        <div
+          key={work.title}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelectCard(work.target);
+            const target = projectItems.find((p) => p.key === work.target);
+            if (target) showToast(`Focused: ${target.title}`);
+          }}
+          className="flex cursor-pointer items-center gap-2.5 rounded-[18px] border border-white/20 bg-white/[.14] p-2.5 transition duration-150 hover:-translate-y-[3px] hover:border-[rgba(118,230,255,.35)] hover:bg-[rgba(118,230,255,.15)]"
+        >
+          {work.image ? (
+            <div className="relative h-[52px] w-[68px] shrink-0 overflow-hidden rounded-[12px] border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,.24)]">
+              <Image
+                src={work.image}
+                alt={work.title}
+                width={136}
+                height={104}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className={cls("thumb relative h-[52px] w-[68px] shrink-0 overflow-hidden rounded-[12px] border border-white/15 bg-[linear-gradient(180deg,#213764,#101c39)]", work.thumb)} />
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] font-extrabold leading-[1.2] truncate" title={work.title}>{work.title}</div>
+            <div className="mt-1 text-[10px] text-[#9fb3d6] truncate" title={work.meta}>{work.meta}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+  );
+});
+
+const MiniPanel = React.memo(function MiniPanel() {
+  return (
+  <section className="z-10 absolute bottom-[88px] right-[286px] min-h-[128px] w-[305px] overflow-hidden pointer-events-none max-lg:hidden">
+    <div className="pointer-events-none w-full h-full"> {/* 👈 */}
+      <RenderModels>
+        <Mini />
+      </RenderModels>
+    </div>
+  </section>
+  );
+});
+
+const ContactPanel = React.memo(function ContactPanel({ active, onFront, showToast }) {
+  const layer = active ? "z-[80] is-active" : "z-10";
+  return (
+  <section
+    onClick={() => onFront("contact")}
+    className={cls(
+      "panel absolute bottom-[88px] right-11 max-h-[178px] lg:max-h-[158px] w-[305px] overflow-hidden rounded-[28px] border border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08)_12%,rgba(255,255,255,.05)_18%,rgba(8,14,28,.42)_100%),linear-gradient(145deg,rgba(118,230,255,.10),rgba(95,135,255,.06))] p-4 shadow-[0_0_0_1px_rgba(255,255,255,.08)_inset,0_12px_30px_rgba(0,0,0,.24),0_0_40px_rgba(118,230,255,.08),0_28px_50px_rgba(5,12,28,.45)] [backdrop-filter:blur(18px)] [-webkit-backdrop-filter:blur(18px)] [transform:translateZ(60px)_rotateY(-10deg)_rotateX(4deg)] cursor-pointer max-[1080px]:relative max-[1080px]:inset-auto max-[1080px]:col-span-4 max-[1080px]:min-h-0 max-[1080px]:w-auto max-[1080px]:[transform:none!important] max-[760px]:col-span-1",
+      layer
+    )}
+  >
+    <ElectricPanelBorder active={active} />
+    <h3 className="mb-3 flex items-center gap-2 text-lg font-extrabold tracking-[.01em]">
+      <span className="h-2.5 w-2.5 rounded-full bg-[#76e6ff] shadow-[0_0_14px_rgba(118,230,255,.95)]" />
+      Get In Touch!
+    </h3>
+    <p className="text-xs leading-[1.4] text-[#9fb3d6]">
+      Available for freelance, full-time product design, and interactive 3D web projects.
+    </p>
+    <div className="mt-3 flex items-center justify-between gap-2.5 max-[760px]:flex-col max-[760px]:items-stretch">
+      <a
+        href="mailto:vidurakavindadev@gmail.com"
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+        className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap rounded-2xl border border-white/15 bg-white/[.08] px-3 py-2.5 text-xs font-bold text-[#eef7ff]"
+      >
+        <span>✉</span>
+        <span className="truncate">vidurakavindadev@gmail.com</span>
+      </a>
+      <a
+        href="mailto:vidurakavindadev@gmail.com"
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+        className="cursor-pointer rounded-full bg-[linear-gradient(180deg,#9beeff,#6ccfff)] px-4 py-2.5 text-sm font-extrabold text-[#173050] shadow-[0_12px_20px_rgba(118,230,255,.18)] transition duration-150 hover:-translate-y-0.5"
+      >
+        Email Me
+      </a>
+    </div>
+    <div className="hidden mt-3 flex items-center justify-between gap-2.5 max-[760px]:flex-col max-[760px]:items-stretch">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          showToast("VKJ");
+        }}
+        className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap rounded-2xl border border-white/15 bg-white/[.08] px-3 py-2.5 text-xs font-bold text-[#eef7ff]"
+      >
+        <span>✉</span>
+        <span className="truncate">vidurakavindadev@gmail.com</span>
+      </button>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          showToast("Let's Talk — replace this with your email, LinkedIn, or booking link.");
+        }}
+        className="cursor-pointer rounded-full bg-[linear-gradient(180deg,#9beeff,#6ccfff)] px-4 py-2.5 text-sm font-extrabold text-[#173050] shadow-[0_12px_20px_rgba(118,230,255,.18)] transition duration-150 hover:-translate-y-0.5"
+      >
+        Let&apos;s Talk
+      </button>
+    </div>
+    <div className="pointer-events-none absolute -bottom-4 -right-4 h-[120px] w-[120px] bg-[radial-gradient(circle,rgba(118,230,255,.30),transparent_70%)] blur-[8px]" />
+  </section>
+  );
+});
+
+export default function PortfolioDeskReactTailwind() {
+  const pageVisible = usePageVisible();
+  const sceneRef = useRef(null);
+  const worldRef = useRef(null);
+  const frameRef = useRef(null);
+  const toastTimerRef = useRef(null);
+  const tiltRef = useRef({ targetX: 0, targetY: 0, currentX: 0, currentY: 0 });
+
+  const [activeKey, setActiveKey] = useState("dashboard");
+  const [toast, setToast] = useState({ show: false, text: "Portfolio system online ✨" });
+  const [activePanel, setActivePanel] = useState("none");
+  const [previewProject, setPreviewProject] = useState(null);
+
+  const showToast = useCallback((message) => {
+    setToast({ show: true, text: message });
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => {
+      setToast((prev) => ({ ...prev, show: false }));
+    }, 2200);
+  }, []);
 
   const viewMore = () => {
     if (!visibleProjects.length) return;
@@ -329,42 +790,70 @@ export default function PortfolioDeskReactTailwind() {
     showToast(`Viewing: ${next.title}`);
   };
 
-  // Bring panel to front helper
-  const bringToFront = (panelId) => {
+  // Bring panel to front helper. Stable so memoized panels skip re-renders.
+  const bringToFront = useCallback((panelId) => {
     setActivePanel(panelId);
-  };
+  }, []);
 
-  const panelLayer = (panelId) => (activePanel === panelId ? "z-[80] is-active" : "z-10");
+  const closePreview = useCallback(() => setPreviewProject(null), []);
 
   useEffect(() => {
     showToast("3D portfolio loaded");
     return () => {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     };
-  }, []);
+  }, [showToast]);
 
+  // The tilt is desktop-only eye candy. The loop must not run on mobile at
+  // all: writing style.transform every frame invalidates style on a large
+  // subtree full of backdrop-blur panels and starves painting on phones.
+  // Even on desktop the transform is written only when its value changes.
   useEffect(() => {
-    if (!pageVisible) return;
+    if (!pageVisible) return undefined;
+
+    const mq = window.matchMedia("(min-width: 1081px)");
+    let lastTransform = "";
 
     const animateTilt = () => {
       const t = tiltRef.current;
       t.currentX += (t.targetX - t.currentX) * 0.08;
       t.currentY += (t.targetY - t.currentY) * 0.08;
 
-      if (worldRef.current) {
-        if (typeof window !== "undefined" && window.innerWidth > 1080) {
-          worldRef.current.style.transform = `rotateX(${t.currentY}deg) rotateY(${t.currentX}deg)`;
-        } else {
-          worldRef.current.style.transform = "none";
+      const el = worldRef.current;
+      if (el) {
+        const next = `rotateX(${t.currentY}deg) rotateY(${t.currentX}deg)`;
+        if (next !== lastTransform) {
+          el.style.transform = next;
+          lastTransform = next;
         }
       }
 
       frameRef.current = requestAnimationFrame(animateTilt);
     };
 
-    frameRef.current = requestAnimationFrame(animateTilt);
+    const sync = () => {
+      if (mq.matches) {
+        if (!frameRef.current) frameRef.current = requestAnimationFrame(animateTilt);
+      } else {
+        if (frameRef.current) {
+          cancelAnimationFrame(frameRef.current);
+          frameRef.current = null;
+        }
+        if (worldRef.current && lastTransform) {
+          worldRef.current.style.transform = "";
+          lastTransform = "";
+        }
+      }
+    };
+
+    sync();
+    if (mq.addEventListener) mq.addEventListener("change", sync);
+    else if (mq.addListener) mq.addListener(sync);
     return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", sync);
+      else if (mq.removeListener) mq.removeListener(sync);
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
     };
   }, [pageVisible]);
 
@@ -774,433 +1263,18 @@ export default function PortfolioDeskReactTailwind() {
               <FloatingCube small className="cube-c left-9 top-[240px] h-[18px] w-[18px] [transform:translateZ(42px)_rotateX(22deg)_rotateY(18deg)] [animation-delay:-3.4s] max-[1080px]:hidden" />
               <FloatingCube small className="cube-d right-[84px] top-[222px] h-[22px] w-[22px] [transform:translateZ(26px)_rotateX(-16deg)_rotateY(20deg)] [animation-delay:-1.7s] max-[1080px]:hidden" />
 
-              {/* LEFT PROFILE PANEL */}
-              <aside
-                onClick={() => bringToFront("profile")}
-                className={cls(
-                  "panel absolute left-[18px] top-[52px] min-h-[460px] w-[220px] overflow-hidden rounded-[28px] border border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08)_12%,rgba(255,255,255,.05)_18%,rgba(8,14,28,.42)_100%),linear-gradient(145deg,rgba(118,230,255,.10),rgba(95,135,255,.06))] p-4 shadow-[0_0_0_1px_rgba(255,255,255,.08)_inset,0_12px_30px_rgba(0,0,0,.24),0_0_40px_rgba(118,230,255,.08),0_28px_50px_rgba(5,12,28,.45)] [backdrop-filter:blur(18px)] [-webkit-backdrop-filter:blur(18px)] [transform:translateZ(60px)_rotateY(14deg)_rotateX(2deg)] cursor-pointer max-[1080px]:relative max-[1080px]:inset-auto max-[1080px]:col-span-4 max-[1080px]:min-h-0 max-[1080px]:w-auto max-[1080px]:[transform:none!important] max-[760px]:col-span-1",
-                  panelLayer("profile")
-                )}
-              >
-                <ElectricPanelBorder active={activePanel === "profile"} />
-                <div className="avatar-box relative mb-3 h-[180px] overflow-hidden rounded-[22px] border border-white/25 bg-[radial-gradient(160px_120px_at_50%_15%,rgba(255,255,255,.5),transparent_45%),linear-gradient(180deg,rgba(150,195,255,.45),rgba(58,92,138,.35)_35%,rgba(24,39,73,.8)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,.4),inset_0_-16px_24px_rgba(0,0,0,.28)]">
-                  <div className="avatar absolute inset-0 [transform:translateZ(18px)]">
-                    <RenderModels><VkjAnime /></RenderModels>
-                  </div>
-                </div>
+              <ProfilePanel active={activePanel === "profile"} onFront={bringToFront} showToast={showToast} />
 
-                <h2 className="mb-0.5 text-[26px] font-extrabold leading-none tracking-[-.03em] max-[760px]:text-2xl">Vidura Kavinda</h2>
-                <p className="mb-3.5 text-[13px] font-bold text-[#9fb3d6]">FULLSTACK DEVELOPER &amp; DEVOPS</p>
+              <ProjectCarousel activeKey={activeKey} onSelectCard={setActiveKey} onPreview={setPreviewProject} active={activePanel === "portfolio"} onFront={bringToFront} />
 
-                <div className="my-3 grid grid-cols-3 gap-2">
-                  {[
-                    ["6+", "Years"],
-                    ["15+", "Projects"],
-                    ["24/7", "Creative"],
-                  ].map(([num, label]) => (
-                    <div key={label} className="rounded-2xl border border-white/10 bg-white/[.06] px-1.5 py-2.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,.08)]">
-                      <strong className="mb-1 block text-[18px] leading-none">{num}</strong>
-                      <span className="text-[11px] font-bold text-[#9fb3d6]">{label}</span>
-                    </div>
-                  ))}
-                </div>
+              <SkillsPanel active={activePanel === "skills"} onFront={bringToFront} />
 
-                <div className="grid gap-2.5">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      showToast(
-                        "About Me: I design sleek product interfaces, 3D web experiences, and polished interactive systems."
-                      );
-                    }}
-                    className="cursor-pointer rounded-full bg-[linear-gradient(180deg,#9beeff,#6ccfff)] px-4 py-2.5 text-sm font-extrabold text-[#173050] shadow-[0_12px_20px_rgba(118,230,255,.18)] transition duration-150 hover:-translate-y-0.5"
-                  >
-                    <Link href="/about">About Me</Link>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      showToast("Contact panel ready on the right. Yes, it glows on purpose.");
+              <TestimonialsPanel active={activePanel === "testimonials"} onFront={bringToFront} />
 
-                    }}
-                    className="cursor-pointer rounded-full border border-white/15 bg-white/[.08] px-3.5 py-[9px] text-xs font-bold text-[#eff7ff] transition duration-150 hover:-translate-y-0.5"
-                  >
-                    <Link href="/contact">Contact Me </Link>
-                  </button>
-                </div>
+              <LatestWorksPanel active={activePanel === "works"} onFront={bringToFront} onSelectCard={setActiveKey} showToast={showToast} />
 
-                <div className="mt-3.5 flex items-center justify-between gap-2">
-                  {socialLinks.map(({ label, href, title, external }) => (
-                    <a
-                      key={title}
-                      href={href}
-                      title={title}
-                      aria-label={title}
-                      target={external ? "_blank" : undefined}
-                      rel={external ? "noreferrer noopener" : undefined}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                      className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-xl border border-white/15 bg-white/[.08] text-[13px] font-extrabold text-[#eaf7ff] transition duration-150 hover:-translate-y-0.5 hover:bg-[rgba(118,230,255,.14)] hover:shadow-[0_0_20px_rgba(118,230,255,.12)]"
-                    >
-                      {title === "Call" ? "☎" : label}
-                    </a>
-                  ))}
-                </div>
-
-                <div className="mt-3.5 hidden gap-2">
-                  {[
-                    ["f", "Facebook placeholder"],
-                    ["x", "X / Twitter placeholder"],
-                    ["in", "LinkedIn placeholder"],
-                    ["📞", "Call placeholder"],
-                  ].map(([label, msg]) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        showToast(msg);
-                      }}
-                      className="grid h-[34px] w-[34px] place-items-center rounded-xl border border-white/15 bg-white/[.08] text-[13px] font-extrabold text-[#eaf7ff] transition duration-150 hover:-translate-y-0.5 hover:bg-[rgba(118,230,255,.14)] hover:shadow-[0_0_20px_rgba(118,230,255,.12)]"
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </aside>
-
-              {/* CENTER PORTFOLIO PANEL */}
-              <main
-                onClick={() => bringToFront("portfolio")}
-                className={cls(
-                  "panel absolute left-1/2 top-7 min-h-[352px] w-[min(560px,50%)] -translate-x-1/2 overflow-hidden rounded-[28px] border border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08)_12%,rgba(255,255,255,.05)_18%,rgba(8,14,28,.42)_100%),linear-gradient(145deg,rgba(118,230,255,.10),rgba(95,135,255,.06))] p-4 shadow-[0_0_0_1px_rgba(255,255,255,.08)_inset,0_12px_30px_rgba(0,0,0,.24),0_0_40px_rgba(118,230,255,.08),0_28px_50px_rgba(5,12,28,.45)] [backdrop-filter:blur(18px)] [-webkit-backdrop-filter:blur(18px)] [transform:translateX(-50%)_translateZ(76px)_rotateX(2deg)] cursor-pointer max-[1080px]:relative max-[1080px]:inset-auto max-[1080px]:col-span-8 max-[1080px]:min-h-0 max-[1080px]:w-auto max-[1080px]:translate-x-0 max-[1080px]:[transform:none!important] max-[760px]:col-span-1",
-                  panelLayer("portfolio")
-                )}
-              >
-                <ElectricPanelBorder active={activePanel === "portfolio"} />
-                <div className="mb-2.5 flex items-center justify-between gap-3 max-[760px]:flex-col max-[760px]:items-start">
-                  <div className="flex items-center gap-1.5 text-sm font-extrabold text-[#eff8ff]">
-                    <span className="grid grid-cols-2 gap-1">
-                      <i className="block h-2 w-2 rounded-[2px] bg-[#ff7b8a]" />
-                      <i className="block h-2 w-2 rounded-[2px] bg-[#ffd66b]" />
-                      <i className="block h-2 w-2 rounded-[2px] bg-[#70f0d1]" />
-                      <i className="block h-2 w-2 rounded-[2px] bg-[#73afff]" />
-                    </span>
-                    <span>My Portfolio</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (activeProject && activeProject.id) {
-                        router.push(`/projects?target=${activeProject.id}`);
-                      } else {
-                        router.push('/projects');
-                      }
-                    }}
-                    className="cursor-pointer rounded-full border border-white/15 bg-white/[.08] px-3.5 py-[9px] text-xs font-bold text-[#eff7ff] transition duration-150 hover:-translate-y-0.5"
-                  >
-                    View More
-                  </button>
-                </div>
-
-                <div className="mb-3.5 flex flex-wrap gap-2">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.key}
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        applyFilter(tab.key);
-                      }}
-                      className={cls(
-                        "cursor-pointer rounded-full border px-3 py-[7px] text-[11px] font-bold tracking-[.01em] transition duration-150 hover:-translate-y-0.5",
-                        filter === tab.key
-                          ? "border-transparent bg-[linear-gradient(180deg,rgba(255,255,255,.9),rgba(227,241,255,.85))] text-[#223052] shadow-[0_8px_18px_rgba(255,255,255,.16)]"
-                          : "border-white/15 bg-white/[.07] text-[#d4e3ff]"
-                      )}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-3 gap-3 max-[760px]:grid-cols-1">
-                  {paginatedProjects.map((project) => {
-                    return (
-                      <article
-                        key={project.key}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          selectCard(project.key);
-                        }}
-                        className={cls(
-                          "min-w-0 cursor-pointer flex-col gap-[9px] rounded-[20px] border bg-white/[.14] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,.12)] transition duration-200",
-                          "flex",
-                          activeKey === project.key
-                            ? "border-[rgba(118,230,255,.55)] bg-[linear-gradient(180deg,rgba(118,230,255,.11),rgba(255,255,255,.05))] shadow-[0_0_0_1px_rgba(118,230,255,.18)_inset,0_14px_30px_rgba(0,0,0,.28),0_0_24px_rgba(118,230,255,.18)]"
-                            : "border-white/15 hover:-translate-y-[5px] hover:border-[rgba(118,230,255,.36)] hover:shadow-[0_16px_24px_rgba(0,0,0,.25),0_0_18px_rgba(118,230,255,.12)]"
-                        )}
-                      >
-                        {project.image ? (
-                          <div className="preview h-28 rounded-2xl relative overflow-hidden border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,.24)]">
-                            <Image
-                              src={project.image}
-                              alt={project.title}
-                              width={640}
-                              height={360}
-                              loading="lazy"
-                              decoding="async"
-                              className="absolute inset-0 w-full h-full object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <Preview type={project.type} />
-                        )}
-                        <div className="text-xs font-extrabold leading-[1.3] text-[#eef7ff]">{project.title}</div>
-                        <ProjectActions
-                          project={project}
-                          onPreview={setPreviewProject}
-                          className="mt-0.5"
-                        />
-                      </article>
-                    );
-                  })}
-                </div>
-
-                {totalPages > 1 && (
-                  <div className="mt-3.5 flex items-center justify-center gap-3">
-                    <button
-                      onClick={goPrevPage}
-                      disabled={currentPage === 0}
-                      className="px-4 py-2 rounded-lg bg-white/[.06] border border-white/15 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/[.12] transition"
-                    >
-                      ← Previous
-                    </button>
-                    <div className="text-sm text-white/60">
-                      Page {currentPage + 1} of {totalPages}
-                    </div>
-                    <button
-                      onClick={goNextPage}
-                      disabled={currentPage === totalPages - 1}
-                      className="px-4 py-2 rounded-lg bg-white/[.06] border border-white/15 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/[.12] transition"
-                    >
-                      Next →
-                    </button>
-                  </div>
-                )}
-
-                <div className="mt-3.5 flex items-center justify-between gap-3 rounded-[18px] border border-white/20 bg-white/[.14] px-3.5 py-3 max-[760px]:flex-col max-[760px]:items-start">
-                  <div className="min-w-0">
-                    <div className="mb-[3px] text-[11px] font-extrabold uppercase tracking-[.12em] text-[#76e6ff]">Selected Project</div>
-                    <div className="truncate text-sm font-extrabold">{activeProject.title}</div>
-                    <div className="truncate text-xs text-[#9fb3d6]">{activeProject.note}</div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (activeProject && activeProject.link) {
-                        window.open(activeProject.link, '_blank', 'noopener,noreferrer');
-                      }
-                    }}
-                    className="cursor-pointer rounded-full bg-[linear-gradient(180deg,#9beeff,#6ccfff)] px-4 py-2.5 text-sm font-extrabold text-[#173050] shadow-[0_12px_20px_rgba(118,230,255,.18)] transition duration-150 hover:-translate-y-0.5"
-                    aria-label="Open project repository in a new tab"
-                  >
-                    Open
-                  </button>
-                </div>
-              </main>
-
-              {/* RIGHT SKILLS PANEL */}
-              <section
-                onClick={() => bringToFront("skills")}
-                className={cls(
-                  "panel absolute right-[22px] top-14 min-h-[154px] w-[210px] overflow-hidden rounded-[28px] border border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08)_12%,rgba(255,255,255,.05)_18%,rgba(8,14,28,.42)_100%),linear-gradient(145deg,rgba(118,230,255,.10),rgba(95,135,255,.06))] p-4 shadow-[0_0_0_1px_rgba(255,255,255,.08)_inset,0_12px_30px_rgba(0,0,0,.24),0_0_40px_rgba(118,230,255,.08),0_28px_50px_rgba(5,12,28,.45)] [backdrop-filter:blur(18px)] [-webkit-backdrop-filter:blur(18px)] [transform:translateZ(58px)_rotateY(-15deg)_rotateX(2deg)] cursor-pointer max-[1080px]:relative max-[1080px]:inset-auto max-[1080px]:col-span-4 max-[1080px]:min-h-0 max-[1080px]:w-auto max-[1080px]:[transform:none!important] max-[760px]:col-span-1",
-                  panelLayer("skills")
-                )}
-              >
-                <ElectricPanelBorder active={activePanel === "skills"} />
-                <h3 className="mb-3 flex items-center gap-2 text-lg font-extrabold tracking-[.01em]">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#76e6ff] shadow-[0_0_14px_rgba(118,230,255,.95)]" />
-                  Skills
-                </h3>
-                <div className="mt-2.5 grid gap-2.5">
-                  {[
-                    ["UI/UX Design", "93%", "93%"],
-                    ["3D Modeling", "88%", "88%"],
-                    ["Animation", "81%", "81%"],
-                    ["Web Development", "90%", "90%"],
-                  ].map(([name, score, width]) => (
-                    <div key={name} className="grid grid-cols-[1fr_auto] items-center gap-x-2.5 gap-y-2">
-                      <div className="text-xs font-bold text-[#eaf5ff]">{name}</div>
-                      <div className="text-[11px] font-extrabold text-[#dbeeff]">{score}</div>
-                      <div className="col-span-full h-2.5 overflow-hidden rounded-full border border-white/10 bg-white/[.08]">
-                        <span
-                          className="block h-full rounded-full bg-[linear-gradient(90deg,#7de9ff,#6cb1ff)] shadow-[0_0_12px_rgba(118,230,255,.4)] [animation:meterIn_1s_ease_both] origin-left"
-                          style={{ width }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* RIGHT TESTIMONIALS PANEL */}
-              <section
-                onClick={() => bringToFront("testimonials")}
-                className={cls(
-                  "panel absolute right-1 top-[242px] min-h-[220px] w-[250px] overflow-hidden rounded-[28px] border border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08)_12%,rgba(255,255,255,.05)_18%,rgba(8,14,28,.42)_100%),linear-gradient(145deg,rgba(118,230,255,.10),rgba(95,135,255,.06))] p-4 shadow-[0_0_0_1px_rgba(255,255,255,.08)_inset,0_12px_30px_rgba(0,0,0,.24),0_0_40px_rgba(118,230,255,.08),0_28px_50px_rgba(5,12,28,.45)] [backdrop-filter:blur(18px)] [-webkit-backdrop-filter:blur(18px)] [transform:translateZ(62px)_rotateY(-12deg)_rotateX(1deg)] cursor-pointer max-[1080px]:relative max-[1080px]:inset-auto max-[1080px]:col-span-4 max-[1080px]:min-h-0 max-[1080px]:w-auto max-[1080px]:[transform:none!important] max-[760px]:col-span-1",
-                  panelLayer("testimonials")
-                )}
-              >
-                <ElectricPanelBorder active={activePanel === "testimonials"} />
-                <h3 className="mb-3 flex items-center gap-2 text-lg font-extrabold tracking-[.01em]">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#76e6ff] shadow-[0_0_14px_rgba(118,230,255,.95)]" />
-                  Testimonials
-                </h3>
-                <div className="relative h-[90px] w-full">
-                  {testimonials.map((testimonial, idx) => (
-                    <div
-                      key={idx}
-                      className={cls(
-                        "absolute inset-0 transition-opacity duration-500",
-                        activeTestimonialIdx === idx ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
-                      )}
-                    >
-                      <div className="my-2 rounded-2xl border border-white/20 bg-white/[.14] px-3.5 py-3 text-[10px] leading-[1.5] text-[#edf8ff]">
-                        &quot;{testimonial.text}&quot;
-                      </div>
-                      <div className="flex justify-end text-[9px] font-bold text-[#9fb3d6]">
-                        {testimonial.name}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* BOTTOM LEFT LATEST WORKS PANEL */}
-              <section
-                onClick={() => bringToFront("works")}
-                className={cls(
-                  "panel absolute bottom-[86px] left-[286px] min-h-[158px] w-[394px] overflow-hidden rounded-[28px] border border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08)_12%,rgba(255,255,255,.05)_18%,rgba(8,14,28,.42)_100%),linear-gradient(145deg,rgba(118,230,255,.10),rgba(95,135,255,.06))] p-4 shadow-[0_0_0_1px_rgba(255,255,255,.08)_inset,0_12px_30px_rgba(0,0,0,.24),0_0_40px_rgba(118,230,255,.08),0_28px_50px_rgba(5,12,28,.45)] [backdrop-filter:blur(18px)] [-webkit-backdrop-filter:blur(18px)] [transform:translateZ(55px)_rotateX(5deg)_rotateY(3deg)] cursor-pointer max-[1080px]:relative max-[1080px]:inset-auto max-[1080px]:col-span-8 max-[1080px]:min-h-0 max-[1080px]:w-auto max-[1080px]:[transform:none!important] max-[760px]:col-span-1",
-                  panelLayer("works")
-                )}
-              >
-                <ElectricPanelBorder active={activePanel === "works"} />
-                <h3 className="mb-3 flex items-center gap-2 text-lg font-extrabold tracking-[.01em]">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#76e6ff] shadow-[0_0_14px_rgba(118,230,255,.95)]" />
-                  Latest Works
-                </h3>
-                <div className="mt-2.5 grid grid-cols-2 gap-3 max-[780px]:grid-cols-1">
-                  {latestWorkItems.map((work) => (
-                    <div
-                      key={work.title}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        selectCard(work.target);
-                        const target = projectItems.find((p) => p.key === work.target);
-                        if (target) showToast(`Focused: ${target.title}`);
-                      }}
-                      className="flex cursor-pointer items-center gap-2.5 rounded-[18px] border border-white/20 bg-white/[.14] p-2.5 transition duration-150 hover:-translate-y-[3px] hover:border-[rgba(118,230,255,.35)] hover:bg-[rgba(118,230,255,.15)]"
-                    >
-                      {work.image ? (
-                        <div className="relative h-[52px] w-[68px] shrink-0 overflow-hidden rounded-[12px] border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,.24)]">
-                          <Image
-                            src={work.image}
-                            alt={work.title}
-                            width={136}
-                            height={104}
-                            loading="lazy"
-                            decoding="async"
-                            className="absolute inset-0 w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className={cls("thumb relative h-[52px] w-[68px] shrink-0 overflow-hidden rounded-[12px] border border-white/15 bg-[linear-gradient(180deg,#213764,#101c39)]", work.thumb)} />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[11px] font-extrabold leading-[1.2] truncate" title={work.title}>{work.title}</div>
-                        <div className="mt-1 text-[10px] text-[#9fb3d6] truncate" title={work.meta}>{work.meta}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* BOTTOM RIGHT MINI MODEL PANEL */}
-              <section className="z-10 absolute bottom-[88px] right-[286px] min-h-[128px] w-[305px] overflow-hidden pointer-events-none max-lg:hidden">
-                <div className="pointer-events-none w-full h-full"> {/* 👈 */}
-                  <RenderModels>
-                    <Mini />
-                  </RenderModels>
-                </div>
-              </section>
-              {/* BOTTOM RIGHT CONTACT PANEL */}
-              <section
-                onClick={() => bringToFront("contact")}
-                className={cls(
-                  "panel absolute bottom-[88px] right-11 max-h-[178px] lg:max-h-[158px] w-[305px] overflow-hidden rounded-[28px] border border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08)_12%,rgba(255,255,255,.05)_18%,rgba(8,14,28,.42)_100%),linear-gradient(145deg,rgba(118,230,255,.10),rgba(95,135,255,.06))] p-4 shadow-[0_0_0_1px_rgba(255,255,255,.08)_inset,0_12px_30px_rgba(0,0,0,.24),0_0_40px_rgba(118,230,255,.08),0_28px_50px_rgba(5,12,28,.45)] [backdrop-filter:blur(18px)] [-webkit-backdrop-filter:blur(18px)] [transform:translateZ(60px)_rotateY(-10deg)_rotateX(4deg)] cursor-pointer max-[1080px]:relative max-[1080px]:inset-auto max-[1080px]:col-span-4 max-[1080px]:min-h-0 max-[1080px]:w-auto max-[1080px]:[transform:none!important] max-[760px]:col-span-1",
-                  panelLayer("contact")
-                )}
-              >
-                <ElectricPanelBorder active={activePanel === "contact"} />
-                <h3 className="mb-3 flex items-center gap-2 text-lg font-extrabold tracking-[.01em]">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#76e6ff] shadow-[0_0_14px_rgba(118,230,255,.95)]" />
-                  Get In Touch!
-                </h3>
-                <p className="text-xs leading-[1.4] text-[#9fb3d6]">
-                  Available for freelance, full-time product design, and interactive 3D web projects.
-                </p>
-                <div className="mt-3 flex items-center justify-between gap-2.5 max-[760px]:flex-col max-[760px]:items-stretch">
-                  <a
-                    href="mailto:vidurakavindadev@gmail.com"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                    className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap rounded-2xl border border-white/15 bg-white/[.08] px-3 py-2.5 text-xs font-bold text-[#eef7ff]"
-                  >
-                    <span>✉</span>
-                    <span className="truncate">vidurakavindadev@gmail.com</span>
-                  </a>
-                  <a
-                    href="mailto:vidurakavindadev@gmail.com"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                    className="cursor-pointer rounded-full bg-[linear-gradient(180deg,#9beeff,#6ccfff)] px-4 py-2.5 text-sm font-extrabold text-[#173050] shadow-[0_12px_20px_rgba(118,230,255,.18)] transition duration-150 hover:-translate-y-0.5"
-                  >
-                    Email Me
-                  </a>
-                </div>
-                <div className="hidden mt-3 flex items-center justify-between gap-2.5 max-[760px]:flex-col max-[760px]:items-stretch">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      showToast("VKJ");
-                    }}
-                    className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap rounded-2xl border border-white/15 bg-white/[.08] px-3 py-2.5 text-xs font-bold text-[#eef7ff]"
-                  >
-                    <span>✉</span>
-                    <span className="truncate">vidurakavindadev@gmail.com</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      showToast("Let's Talk — replace this with your email, LinkedIn, or booking link.");
-                    }}
-                    className="cursor-pointer rounded-full bg-[linear-gradient(180deg,#9beeff,#6ccfff)] px-4 py-2.5 text-sm font-extrabold text-[#173050] shadow-[0_12px_20px_rgba(118,230,255,.18)] transition duration-150 hover:-translate-y-0.5"
-                  >
-                    Let&apos;s Talk
-                  </button>
-                </div>
-                <div className="pointer-events-none absolute -bottom-4 -right-4 h-[120px] w-[120px] bg-[radial-gradient(circle,rgba(118,230,255,.30),transparent_70%)] blur-[8px]" />
-              </section>
+              <MiniPanel />
+              <ContactPanel active={activePanel === "contact"} onFront={bringToFront} showToast={showToast} />
 
               <div className="pointer-events-none absolute bottom-1.5 left-1/2 -translate-x-1/2 text-center text-xs uppercase tracking-[.12em] text-[rgba(230,244,255,.72)] [text-shadow:0_0_12px_rgba(118,230,255,.12)] max-[1080px]:relative max-[1080px]:left-auto max-[1080px]:bottom-auto max-[1080px]:col-span-full max-[1080px]:translate-x-0 max-[1080px]:pt-2 max-[760px]:col-span-1">
                 Move mouse for <b className="text-[#76e6ff]">3D tilt</b> • Click panels to bring forward
@@ -1209,7 +1283,7 @@ export default function PortfolioDeskReactTailwind() {
           </div>
         </div>
       </div>
-      <PreviewModal project={previewProject} onClose={() => setPreviewProject(null)} />
+      <PreviewModal project={previewProject} onClose={closePreview} />
     </>
   );
 }
