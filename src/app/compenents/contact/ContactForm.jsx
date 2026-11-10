@@ -31,10 +31,16 @@ function ContactForm() {
   const [notice, setNotice] = useState(null); // { type: "success" | "error", text, detail }
 
   useEffect(() => {
+    let cancelled = false;
+    let polls = 0;
+    let readyQueued = false;
+
     const renderWidget = () => {
-      if (widgetIdRef.current !== null || !captchaRef.current) return;
+      if (cancelled || widgetIdRef.current !== null || !captchaRef.current) return true;
       const api = window.grecaptcha;
-      if (!api || !api.render) return;
+      // api.js is only a bootstrap script: grecaptcha.render() exists only
+      // after the real implementation loads from gstatic, later.
+      if (!api || typeof api.render !== "function") return false;
       try {
         widgetIdRef.current = api.render(captchaRef.current, {
           sitekey: RECAPTCHA_SITE_KEY,
@@ -46,35 +52,60 @@ function ContactForm() {
           "expired-callback": () => setVerified(false),
           "error-callback": () => setVerified(false),
         });
+        setWidgetError(false);
       } catch {
-        // render() was already called for this container
+        // render() threw (bad key type/domain shows Google's own error box;
+        // anything else must be visible, never silent)
+        setWidgetError(true);
+      }
+      return true;
+    };
+
+    const waitAndRender = () => {
+      if (cancelled) return;
+      const api = window.grecaptcha;
+      // grecaptcha.ready() queues the callback until the full widget code has
+      // loaded — the officially supported way to know render() is available.
+      if (api && typeof api.ready === "function" && !readyQueued) {
+        readyQueued = true;
+        api.ready(() => {
+          if (!cancelled) renderWidget();
+        });
+      }
+      if (!renderWidget()) {
+        polls += 1;
+        if (polls <= 24) setTimeout(waitAndRender, 250); // safety net, ~6s
       }
     };
 
-    if (window.grecaptcha && window.grecaptcha.render) {
-      renderWidget();
-      return;
-    }
+    const onError = () => {
+      if (!cancelled) setWidgetError(true);
+    };
 
     const id = "vkj-recaptcha-api";
     let script = document.getElementById(id);
-    const onLoad = () => renderWidget();
-    const onError = () => setWidgetError(true);
     if (!script) {
       script = document.createElement("script");
       script.id = id;
       script.src = "https://www.google.com/recaptcha/api.js?render=explicit";
       script.async = true;
       script.defer = true;
-      script.onload = onLoad;
-      script.onerror = onError;
       document.head.appendChild(script);
-    } else {
-      script.addEventListener("load", onLoad);
-      script.addEventListener("error", onError);
     }
+    script.addEventListener("load", waitAndRender);
+    script.addEventListener("error", onError);
+    waitAndRender(); // also covers the "script already loaded" case
+
+    // Never leave a silent empty slot: if nothing rendered after 8s, say why.
+    // Deliberately NOT cancelled on unmount — if the form remounts (page churn),
+    // this must still fire instead of being silently reset every time.
+    setTimeout(() => {
+      if (widgetIdRef.current === null) setWidgetError(true);
+    }, 8000);
+
     return () => {
-      script.removeEventListener("load", onLoad);
+      cancelled = true;
+      script.removeEventListener("load", waitAndRender);
       script.removeEventListener("error", onError);
     };
   }, []);
