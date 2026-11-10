@@ -111,6 +111,103 @@ const StatsCard = ({ src, alt, className }) => (
 );
 
 /* ─────────────────────────────────────────────
+   REPOS PER LANGUAGE  —  custom ring chart
+───────────────────────────────────────────── */
+// Primary language of each non-fork public repo. Snapshot from
+// https://api.github.com/users/Vidu1999/repos on 2026-11-06 — 30 public
+// repos, 15 of them carry a detected language. Refresh when new repos land.
+const REPO_LANGUAGES = [
+  { name: "Python", count: 7, color: "#3572A5" },
+  { name: "JavaScript", count: 6, color: "#f1e05a" },
+  { name: "CSS", count: 1, color: "#563d7c" },
+  { name: "C++", count: 1, color: "#f34b7d" },
+];
+
+const LanguageRingCard = () => {
+  const total = REPO_LANGUAGES.reduce((sum, l) => sum + l.count, 0);
+  const R = 54;
+  const C = 2 * Math.PI * R;
+  const GAP = 5;
+
+  let acc = 0;
+  const arcs = REPO_LANGUAGES.map((l) => {
+    const arc = (l.count / total) * C;
+    const seg = {
+      ...l,
+      len: arc - GAP,
+      offset: -acc,
+      pct: Number(((l.count / total) * 100).toFixed(1)),
+    };
+    acc += arc;
+    return seg;
+  });
+
+  return (
+    <TiltCard className="p-5 overflow-hidden min-h-[250px] flex flex-col">
+      <p className="text-xs uppercase tracking-widest text-indigo-400 mb-2 font-semibold">
+        Repos per Language
+      </p>
+
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 min-[420px]:flex-row">
+        {/* Ring */}
+        <div className="relative h-[150px] w-[150px] shrink-0">
+          <div className="absolute inset-3 rounded-full bg-indigo-500/10 blur-2xl" />
+          <svg
+            viewBox="0 0 150 150"
+            role="img"
+            aria-label={`Repos per language: ${REPO_LANGUAGES.map((l) => `${l.name} ${l.count}`).join(", ")}`}
+            className="relative h-full w-full -rotate-90"
+          >
+            <circle cx="75" cy="75" r={R} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="20" />
+            {arcs.map((seg, i) => (
+              <motion.circle
+                key={seg.name}
+                cx="75"
+                cy="75"
+                r={R}
+                fill="none"
+                stroke={seg.color}
+                strokeWidth="20"
+                strokeLinecap="butt"
+                initial={{ opacity: 0, strokeDasharray: `0 ${C.toFixed(2)}` }}
+                whileInView={{ opacity: 1, strokeDasharray: `${seg.len.toFixed(2)} ${(C - seg.len).toFixed(2)}` }}
+                viewport={{ once: true, amount: 0.4 }}
+                transition={{ duration: 0.9, delay: 0.15 * i, ease: "easeOut" }}
+                style={{ strokeDashoffset: seg.offset }}
+                className="transition-[filter] duration-200 hover:brightness-125"
+              />
+            ))}
+          </svg>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-3xl font-bold leading-none text-white">{total}</span>
+            <span className="mt-1 text-[9px] font-semibold uppercase tracking-[0.25em] text-indigo-300">
+              repos
+            </span>
+            <span className="mt-0.5 text-[9px] text-gray-500">{REPO_LANGUAGES.length} languages</span>
+          </div>
+        </div>
+
+        {/* Legend — square swatches */}
+        <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+          {arcs.map((seg) => (
+            <div key={seg.name} className="flex items-center gap-2.5">
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-[3px]"
+                style={{ backgroundColor: seg.color, boxShadow: `0 0 10px ${seg.color}80` }}
+              />
+              <span className="min-w-0 flex-1 truncate text-sm text-white/85">{seg.name}</span>
+              <span className="text-xs tabular-nums text-gray-400">
+                {seg.count} · {seg.pct}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </TiltCard>
+  );
+};
+
+/* ─────────────────────────────────────────────
    MAIN ABOUT COMPONENT
 ───────────────────────────────────────────── */
 const About = () => {
@@ -322,10 +419,7 @@ const About = () => {
               src="https://github-readme-stats-eight-theta.vercel.app/api?username=Vidu1999&theme=transparent&hide_border=true&title_color=818CF8&text_color=FFFFFF&text_size=22&icon_color=818CF8&text_bold=false&bg_color=00000000"
               alt="GitHub Stats"
             />
-            <StatsCard
-              src="https://github-profile-summary-cards.vercel.app/api/cards/repos-per-language?username=Vidu1999&theme=transparent"
-              alt="Repos per Language"
-            />
+            <LanguageRingCard />
             <StatsCard
               src="https://streak-stats.demolab.com/?user=Vidu1999&theme=dark&hide_border=true&background=EB545400&ring=818CF8&currStreakLabel=818CF8"
               alt="GitHub Streak"
