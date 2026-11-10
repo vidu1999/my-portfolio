@@ -1,4 +1,5 @@
 import { CheckCircle } from "lucide-react";
+import { pageUrl } from "@/app/lib/seo";
 
 function ContactForm() {
   return (
@@ -8,6 +9,11 @@ function ContactForm() {
           name="contact"
           className="space-y-6"
         >
+          {/* FormSubmit shows its own confirmation page after the POST. Its
+              built-in "back" link resolves to a partial URL from the referrer;
+              the _next field replaces it with the full home page URL (shown as
+              the link and used for the automatic redirect). */}
+          <input type="hidden" name="_next" value={pageUrl("/")} />
           <div className="grid gap-4 sm:grid-cols-2">
             <input
               type="text"
