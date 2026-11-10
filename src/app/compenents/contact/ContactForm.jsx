@@ -18,7 +18,7 @@ const CONTACT_ENDPOINT =
 const RECAPTCHA_SITE_KEY = "6LfPoRkuAAAAAPFIinCD7IKyV0BqyODUI8wKxqyo";
 
 const ENDPOINT_CONFIGURED = !CONTACT_ENDPOINT.includes(
-  "6LfPoRkuAAAAAPFIinCD7IKyV0BqyODUI8wKxqyo"
+  "AKfycby2cB5tqFi2tmcIf37ZcI7zU0FExQwxnaTUpC8I2qGs"
 );
 
 function ContactForm() {
