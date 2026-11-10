@@ -4,6 +4,7 @@ import "@fontsource/chakra-petch/latin-600.css";
 import "@fontsource/chakra-petch/latin-700.css";
 import FireFliesBackground from './compenents/FireFliesBackground';
 import LoadingScreen from './compenents/loading/LoadingScreen';
+import AiGuide from './compenents/AiGuide';
 import { buildMetadata, personJsonLd, websiteJsonLd, siteName, siteUrl } from '@/app/lib/seo';
 
 // Runs before hydration so a returning visitor in the same session never sees a
@@ -47,6 +48,7 @@ export default function RootLayout({ children }) {
         <LoadingScreen />
         {children}
         <FireFliesBackground />
+        <AiGuide />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
