@@ -19,7 +19,7 @@
  */
 
 const RECAPTCHA_SECRET = 'PASTE_YOUR_RECAPTCHA_SECRET_KEY';
-const TO_EMAIL = 'vidurakavindadev@gmail.com'; // where messages arrive
+const TO_EMAIL = 'vidurakavinda1999@gmail.com'; // where messages arrive
 
 function doPost(e) {
   try {
