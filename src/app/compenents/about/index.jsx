@@ -1,6 +1,6 @@
 "use client";
 import React, { useRef, useState } from "react";
-import pi from "/public/bg/vkj1.jpg";
+import pi from "/public/bg/vkj2.jpg";
 import Image from "next/image";
 import Link from "next/link";
 import FacebookBtn from "../Facebook";
