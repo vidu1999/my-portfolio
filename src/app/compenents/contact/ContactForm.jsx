@@ -13,17 +13,16 @@ import { AlertTriangle, CheckCircle, Loader2, X } from "lucide-react";
 const CONTACT_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbxvutfkU4ZoOkaB9AmZ5cibrHOmXY1p7DDZqg1hekZ5ALqRZGvh-yr_cEzwIfGKT9hdKw/exec";
 
-// Public reCAPTCHA v2 site key. The matching secret key belongs only inside
-// the Apps Script, never in this code.
-const RECAPTCHA_SITE_KEY = "6LfPoRkuAAAAAPFIinCD7IKyV0BqyODUI8wKxqyo";
+// Public reCAPTCHA v2 "I'm not a robot" Checkbox site key. The matching
+// secret key belongs only inside the Apps Script, never in this code.
+const RECAPTCHA_SITE_KEY = "6LemExouAAAAAMShhwToVDm6ET2toHTyuhmzJTKg";
 
 // reCAPTCHA widget size for the key above. The current key is registered as
-// a v2 "Invisible" key, so it MUST render with size "invisible": verification
-// runs automatically when the visitor submits (Google shows a challenge only
-// to suspicious traffic) and the "protected by reCAPTCHA" badge shows inline.
-// If the key is ever replaced with a v2 "I'm not a robot" Checkbox key,
-// change this to "normal" to get the visible checkbox + pre-submit gate.
-const RECAPTCHA_SIZE = "invisible";
+// a v2 "I'm not a robot" Checkbox key, so it renders with size "normal":
+// visitors tick the visible checkbox before sending. If the key is ever
+// replaced with a v2 "Invisible" key, change this to "invisible" — the form
+// then verifies automatically at submit and shows the reCAPTCHA badge.
+const RECAPTCHA_SIZE = "normal";
 const IS_INVISIBLE = RECAPTCHA_SIZE !== "normal";
 
 const ENDPOINT_CONFIGURED = !CONTACT_ENDPOINT.includes(
@@ -307,7 +306,7 @@ function ContactForm() {
         className="w-full resize-none rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(10,14,33,.96),rgba(16,22,45,.76))] px-5 py-4 text-white outline-none placeholder:text-slate-400 focus:border-violet-400/60 focus:shadow-[0_0_0_1px_rgba(167,139,250,.2),0_0_26px_rgba(99,102,241,.18)]"
       />
 
-      {/* reCAPTCHA verification (invisible key → inline badge + auto check) */}
+      {/* reCAPTCHA verification ("I'm not a robot" checkbox) */}
       <div className="flex flex-col items-start gap-3">
         <div ref={captchaRef} className="min-h-[78px]" />
         {widgetError ? (
