@@ -11,7 +11,7 @@ import { AlertTriangle, CheckCircle, Loader2, X } from "lucide-react";
 // Until the URL is set, the form shows a setup notice and submissions fail
 // safely with a clear message.
 const CONTACT_ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbxvutfkU4ZoOkaB9AmZ5cibrHOmXY1p7DDZqg1hekZ5ALqRZGvh-yr_cEzwIfGKT9hdKw/exec";
+  "https://script.google.com/macros/s/AKfycbwiDAimma-TSZZX7VSwgRKrNIfgDzvaInl4sUy-n5sdRxWuAGmXZje9bPVPjJYleFetCg/exec";
 
 // Public reCAPTCHA v2 "I'm not a robot" Checkbox site key. The matching
 // secret key belongs only inside the Apps Script, never in this code.
@@ -26,7 +26,7 @@ const RECAPTCHA_SIZE = "normal";
 const IS_INVISIBLE = RECAPTCHA_SIZE !== "normal";
 
 const ENDPOINT_CONFIGURED = !CONTACT_ENDPOINT.includes(
-  "AKfycby2cB5tqFi2tmcIf37ZcI7zU0FExQwxnaTUpC8I2qGs"
+  "REPLACE_WITH_YOUR_DEPLOYMENT_ID"
 );
 
 function ContactForm() {
