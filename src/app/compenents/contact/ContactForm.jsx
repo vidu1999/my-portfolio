@@ -240,9 +240,22 @@ function ContactForm() {
           window.grecaptcha.reset(widgetIdRef.current);
         }
       } else {
+        // The script answers { ok: false, error: "..." } — surface the reason
+        // instead of a generic message so the failure is actionable.
+        const serverError = data && typeof data.error === "string" ? data.error : "";
+        let detail = serverError
+          ? `Form service error: ${serverError.slice(0, 160)}`
+          : `Form service did not respond correctly (HTTP ${res.status}).`;
+        if (/reCAPTCHA verification failed/i.test(serverError)) {
+          detail =
+            "reCAPTCHA verification was rejected — the Apps Script RECAPTCHA_SECRET must match this site key (update it to the current key's secret, then deploy a new version).";
+        } else if (/Missing required fields/i.test(serverError)) {
+          detail = "Please fill in your name, email and message.";
+        }
         setNotice({
           type: "error",
           text: "Message not sent — please try again.",
+          detail,
         });
       }
     } catch {
@@ -350,7 +363,15 @@ function ContactForm() {
                 {notice.text}
               </p>
               {notice.detail ? (
-                <p className="mt-1 text-sm text-green-200/80">{notice.detail}</p>
+                <p
+                  className={
+                    notice.type === "success"
+                      ? "mt-1 text-sm text-green-200/80"
+                      : "mt-1 text-sm text-rose-200/80"
+                  }
+                >
+                  {notice.detail}
+                </p>
               ) : null}
             </div>
             <button
