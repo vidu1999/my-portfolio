@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Snake Game — Vidura Kavinda</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; background: #0b1020;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    color: #e8f0ff; overflow: hidden;
+  }
+  .wrap {
+    height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px; padding: 12px;
+  }
+  canvas {
+    background: #3299d5; image-rendering: pixelated;
+    border: 2px solid rgba(118, 230, 255, .45);
+    border-radius: 8px; box-shadow: 0 0 32px rgba(118, 230, 255, .18);
+    max-width: 100%; max-height: calc(100% - 96px); touch-action: none;
+  }
+  .bar {
+    display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+    justify-content: center; font-size: 12px; color: #9fb3d6;
+  }
+  .bar b { color: #76e6ff; }
+  button {
+    font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+    color: #0b1020; background: #76e6ff; border: 0;
+    border-radius: 999px; padding: 7px 16px;
+  }
+  button.ghost { background: rgba(255,255,255,.12); color: #e8f0ff; }
+  .pad { display: none; gap: 6px; }
+  .pad button { width: 46px; height: 40px; padding: 0; border-radius: 10px; }
+  @media (pointer: coarse) { .pad { display: grid; grid-template-columns: repeat(3, 46px); } .pad .up { grid-column: 2; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <canvas id="game" width="600" height="400" aria-label="Snake game board"></canvas>
+  <div class="bar">
+    <span>Score <b id="score">0</b></span>
+    <span>Arrow keys to move</span>
+    <button id="restart" type="button">Play again</button>
+    <button id="quit" type="button" class="ghost">Quit</button>
+  </div>
+  <div class="pad" aria-hidden="true">
+    <button class="up" data-dir="up">▲</button>
+    <button data-dir="left">◀</button>
+    <button data-dir="down">▼</button>
+    <button data-dir="right">▶</button>
+  </div>
+</div>
+<script>
+/*
+ * Browser port of github.com/vidu1999/snakegame (snake.py, Pygame).
+ *
+ * Kept faithful to the original: 600x400 board, 10px grid, 15 ticks/second,
+ * blue background (50,153,213), green food (0,255,0), black snake, arrow-key
+ * steering, death on wall or self collision, and the same "You Lost!" prompt.
+ * The snake starts stationary until the first keypress, exactly as the Python.
+ *
+ * Differences, both deliberate: `q` cannot close a browser tab so it stops the
+ * loop and shows a resume button, and the score is rendered (the original
+ * created a score font but never drew it).
+ */
+(function () {
+  var W = 600, H = 400, BLOCK = 10, SPEED = 15;
+  var BLUE = '#3299d5', GREEN = '#00ff00', BLACK = '#000000', RED = '#d53250';
+
+  var cv = document.getElementById('game');
+  var ctx = cv.getContext('2d');
+  var scoreEl = document.getElementById('score');
+
+  var x, y, dx, dy, snake, len, foodX, foodY, lost, quit, acc, last, raf;
+
+  function placeFood() {
+    foodX = Math.round(Math.random() * (W - BLOCK) / 10) * 10;
+    foodY = Math.round(Math.random() * (H - BLOCK) / 10) * 10;
+  }
+
+  function reset() {
+    x = W / 2; y = H / 2; dx = 0; dy = 0;
+    snake = []; len = 1; lost = false; quit = false;
+    placeFood();
+    scoreEl.textContent = '0';
+  }
+
+  function msg(text, colour) {
+    ctx.fillStyle = colour;
+    ctx.font = '25px ui-monospace, Menlo, Consolas, monospace';
+    ctx.fillText(text, W / 6, H / 3);
+  }
+
+  function draw() {
+    ctx.fillStyle = BLUE;
+    ctx.fillRect(0, 0, W, H);
+    if (lost) {
+      msg('You Lost! Press C-Play Again or Q-Quit', RED);
+      return;
+    }
+    if (quit) {
+      msg('Quit. Press C to play again.', RED);
+      return;
+    }
+    ctx.fillStyle = GREEN;
+    ctx.fillRect(foodX, foodY, BLOCK, BLOCK);
+    ctx.fillStyle = BLACK;
+    for (var i = 0; i < snake.length; i++) {
+      ctx.fillRect(snake[i][0], snake[i][1], BLOCK, BLOCK);
+    }
+  }
+
+  function step() {
+    if (lost || quit) return;
+    if (x >= W || x < 0 || y >= H || y < 0) { lost = true; return; }
+    x += dx; y += dy;
+    snake.push([x, y]);
+    if (snake.length > len) snake.shift();
+    for (var i = 0; i < snake.length - 1; i++) {
+      if (snake[i][0] === x && snake[i][1] === y) { lost = true; return; }
+    }
+    if (x === foodX && y === foodY) { placeFood(); len += 1; scoreEl.textContent = String(len - 1); }
+  }
+
+  // Fixed 15Hz logic tick, decoupled from the display refresh rate.
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    if (!last) last = now;
+    acc += now - last;
+    last = now;
+    var interval = 1000 / SPEED;
+    var guard = 0;
+    while (acc >= interval && guard++ < 5) { step(); acc -= interval; }
+    draw();
+  }
+
+  function turn(dir) {
+    if (lost || quit) return;
+    if (dir === 'left')  { dx = -BLOCK; dy = 0; }
+    if (dir === 'right') { dx =  BLOCK; dy = 0; }
+    if (dir === 'up')    { dy = -BLOCK; dx = 0; }
+    if (dir === 'down')  { dy =  BLOCK; dx = 0; }
+  }
+
+  var KEYS = {
+    ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down'
+  };
+  window.addEventListener('keydown', function (e) {
+    if (KEYS[e.key]) { e.preventDefault(); turn(KEYS[e.key]); return; }
+    var k = e.key.toLowerCase();
+    if (k === 'c') { reset(); }
+    if (k === 'q') { quit = true; }
+  });
+
+  document.getElementById('restart').addEventListener('click', function () { reset(); cv.focus(); });
+  document.getElementById('quit').addEventListener('click', function () { quit = true; });
+  Array.prototype.forEach.call(document.querySelectorAll('.pad button'), function (b) {
+    b.addEventListener('click', function () { turn(b.dataset.dir); });
+  });
+
+  // Swipe support for touch devices.
+  var sx = 0, sy = 0;
+  cv.addEventListener('touchstart', function (e) {
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+  }, { passive: true });
+  cv.addEventListener('touchend', function (e) {
+    var t = e.changedTouches[0];
+    var ddx = t.clientX - sx, ddy = t.clientY - sy;
+    if (Math.abs(ddx) < 12 && Math.abs(ddy) < 12) return;
+    turn(Math.abs(ddx) > Math.abs(ddy) ? (ddx > 0 ? 'right' : 'left') : (ddy > 0 ? 'down' : 'up'));
+  }, { passive: true });
+
+  // Stop drawing when the modal hides or unmounts this frame.
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { cancelAnimationFrame(raf); raf = 0; last = 0; }
+    else if (!raf) { raf = requestAnimationFrame(frame); }
+  });
+  window.addEventListener('pagehide', function () { cancelAnimationFrame(raf); });
+
+  reset(); acc = 0; last = 0;
+  raf = requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
