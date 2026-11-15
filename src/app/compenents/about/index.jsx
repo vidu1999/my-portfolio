@@ -402,6 +402,9 @@ const About = () => {
 
         {/* ══════════════════════════════
             GITHUB STATS ROW
+            (the stats card is generated in-repo — scripts/github-stats.mjs
+             writes public/stats/github-stats.svg — instead of depending on
+             a third-party service that can pause or break)
         ══════════════════════════════ */}
         <motion.div
           variants={fadeUp}
@@ -416,7 +419,7 @@ const About = () => {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <StatsCard
-              src="https://github-readme-stats-eight-theta.vercel.app/api?username=Vidu1999&theme=transparent&hide_border=true&title_color=818CF8&text_color=FFFFFF&text_size=22&icon_color=818CF8&text_bold=false&bg_color=00000000"
+              src={publicAsset("stats/github-stats.svg")}
               alt="GitHub Stats"
             />
             <LanguageRingCard />
