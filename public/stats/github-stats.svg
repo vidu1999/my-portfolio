@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="450" height="195" viewBox="0 0 450 195" role="img" aria-label="Vidu1999's GitHub Stats">
+  <title>Vidu1999&#39;s GitHub Stats</title>
+  <g font-family="'Segoe UI', Ubuntu, sans-serif" font-weight="400">
+  <text x="40" y="46" font-size="21" fill="#818CF8">Vidu1999&#39;s GitHub Stats</text>
+  <text x="412" y="94" font-size="12" text-anchor="end" fill="#FFFFFF" fill-opacity="0.4">github.com/Vidu1999</text>
+  <text x="412" y="112" font-size="12" text-anchor="end" fill="#FFFFFF" fill-opacity="0.4">member since 2021</text>
+  
+  <g transform="translate(40 69)"><path d="M7.5 0.5l2.05 4.15 4.58 0.67-3.31 3.23 0.78 4.56L7.5 10.96 3.4 13.11l0.78-4.56L0.87 5.32l4.58-0.67z" fill="#818CF8"/></g>
+  <text x="64" y="80" font-size="15" fill="#FFFFFF" fill-opacity="0.75">Total Stars:<tspan dx="7" fill="#FFFFFF" fill-opacity="1">0</tspan></text>
+  <g transform="translate(40 94)"><circle cx="7.5" cy="7.5" r="3" fill="#818CF8"/><rect x="0" y="6.6" width="4" height="1.8" fill="#818CF8"/><rect x="11" y="6.6" width="4" height="1.8" fill="#818CF8"/></g>
+  <text x="64" y="105" font-size="15" fill="#FFFFFF" fill-opacity="0.75">Total Commits:<tspan dx="7" fill="#FFFFFF" fill-opacity="1">302</tspan></text>
+  <g transform="translate(40 119)"><circle cx="3.4" cy="3.4" r="2.2" fill="none" stroke="#818CF8" stroke-width="1.6"/><circle cx="3.4" cy="11.6" r="2.2" fill="none" stroke="#818CF8" stroke-width="1.6"/><rect x="2.6" y="5" width="1.6" height="4.6" fill="#818CF8"/><path d="M7 3.4h2.4v2.2M7 3.4l2 2M12 8.2v4.2M10.2 10.8l1.8 1.8 1.8-1.8" fill="none" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round"/></g>
+  <text x="64" y="130" font-size="15" fill="#FFFFFF" fill-opacity="0.75">Total PRs:<tspan dx="7" fill="#FFFFFF" fill-opacity="1">27</tspan></text>
+  <g transform="translate(40 144)"><circle cx="7.5" cy="7.5" r="6.2" fill="none" stroke="#818CF8" stroke-width="1.6"/><circle cx="7.5" cy="7.5" r="1.7" fill="#818CF8"/></g>
+  <text x="64" y="155" font-size="15" fill="#FFFFFF" fill-opacity="0.75">Total Issues:<tspan dx="7" fill="#FFFFFF" fill-opacity="1">0</tspan></text>
+  <g transform="translate(40 169)"><circle cx="5.2" cy="5" r="2.6" fill="#818CF8"/><path d="M0.8 14c0-2.6 2-4.2 4.4-4.2s4.4 1.6 4.4 4.2" fill="#818CF8"/><circle cx="11.4" cy="5.4" r="2.1" fill="none" stroke="#818CF8" stroke-width="1.5"/><path d="M10 9.9c2.3-0.3 4.2 1.2 4.2 3.6" fill="none" stroke="#818CF8" stroke-width="1.5"/></g>
+  <text x="64" y="180" font-size="15" fill="#FFFFFF" fill-opacity="0.75">Followers:<tspan dx="7" fill="#FFFFFF" fill-opacity="1">0</tspan></text>
+  </g>
+</svg>
